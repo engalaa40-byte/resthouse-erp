@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>بوابة الموظفين</title>
+<script>
+/* مضيف الاستضافة يقدّم ملف التطبيق من الجذر فقط — هذا المدخل يجعل /staff رابطاً يعمل،
+   فيُعاد توجيهه إلى نفس الملف مع علامة ?staff التي تفتح بوابة الموظفين */
+(function(){
+  var path = String(location.pathname || '').replace(/\/+$/, '').replace(/\/staff$/i, '');
+  var search = String(location.search || '');
+  if(search && !/[?&](staff|portal)\b/i.test(search)) search += '&staff';
+  else if(!search) search = '?staff';
+  location.replace(path + '/' + search + String(location.hash || ''));
+})();
+</script>
+<noscript><a href="../?staff">افتح بوابة الموظفين</a></noscript>
+</head>
+<body dir="rtl">يُفتح الآن…</body>
+</html>
