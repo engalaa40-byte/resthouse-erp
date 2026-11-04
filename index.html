@@ -1129,6 +1129,18 @@ nav button .ico svg{width:19px; height:19px; display:block; margin:0 auto; verti
     <p class="hint" style="margin-top:10px;">الحماية طبقتان: الدمج سجلٌ بسجل حسب الرقم التسلسلي وأحدث تعديل، والرفع مشروط بطابع النسخة المقروءة — فإذا كتب جهازٌ آخر في الأثناء يُرفض الرفع ويعيد الجهاز القراءة والدمج من جديد، فلا يُمحى حجز أحد فوق حجز أحد. والرفض يظهر قبل الحفظ: شاشة الحجز تقرأ السحابة أولاً فتعرف أن الليلة بيعت.</p>
     <div id="cloudDiag" class="hint" style="margin-top:10px;"></div>
   </div>
+  <div class="panel" style="max-width:760px;">
+    <h3>🚪 بوابة الموظفين — رابط نظيف تعطيهم إياه</h3>
+    <p class="hint" style="margin-bottom:10px;">هذا الرابط نفس البرنامج ونفس السجل، لكن شاشات المالك لا تظهر فيه: لا «تأسيس النظام» ولا «⚙️ الإعدادات» ولا «☁️ المزامنة» ولا «👥 الموظفون» ولا «💾 النسخ الاحتياطي» ولا «📋 سجل العمليات». يفتح على دخول مباشرة، فيكتب الموظف اسمه وكلمته وتظهر له صفحات وظيفته. أنت تظل تفتح الرابط الرئيسي كما كنت — لا شيء في جهازك يتغيّر.</p>
+    <div class="form-row"><label>رابط الموظفين</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input id="staffLink" dir="ltr" class="tl" readonly style="flex:1;" onclick="this.select()">
+        <button class="btn btn-gray btn-sm" onclick="copyStaffLink()">📋 نسخ</button>
+      </div>
+      <div class="hint" id="staffLinkAlt"></div>
+    </div>
+    <p class="hint">الرابط وحده ليس جدار أمان: من يفتح الرابط الرئيسي يدخل كما كان. الذي يحمي السجل كلمةُ مرور كل موظف وصفحاتُ وظيفته المحدودة — وقد قيس ذلك في المتصفح: صفحةٌ لا يراها الدور لا تُفتح له، والإجراءُ غير المصرّح يردّ بـ«⛔ ليس لديك صلاحية لهذا الإجراء».</p>
+  </div>
   <div class="panel" style="max-width:560px;">
     <h3>💾 النسخ الاحتياطي المحلي</h3>
     <div style="display:flex; gap:8px;">
@@ -1538,8 +1550,13 @@ const CFG_KEY = 'chalet_sync_cfg_v1';
 const SESSION_KEY = 'chalet_erp_session_v1';
 const SESSION_TTL = 12*60*60*1000;
 const DEFAULT_PASS = '1234';
-const VERSION = 'v6.2';
+const VERSION = 'v6.3';
 const VAT = 0.15;
+/* بوابة الموظفين: /staff أو ?staff = نفس البرنامج بلا شاشة تأسيس ولا شاشات المالك.
+   الحالة تُقرأ من الرابط في كل فتح ولا تُخزَّن: الرابط الرئيسي يبقى كاملاً على نفس الجهاز */
+const STAFF_MODE = /(^|\/)staff$/i.test(String(location.pathname || '').replace(/\/+$/, ''))
+                || /(^|[?&])(staff|portal)\b/i.test(String(location.search || ''))
+                || /^#(staff|portal)\b/i.test(String(location.hash || ''));
 const MAX_NIGHTS = 30;
 const FMT = 'ar-SA-u-nu-latn';
 const DOW = ['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
@@ -2096,6 +2113,8 @@ function applyBrand(){
   document.getElementById('brandTax').value = b.tax;
   const waIn = document.getElementById('brandWa'); if(waIn) waIn.value = b.wa || '';
   document.getElementById('brandPreview').innerHTML = b.logo ? `<img src="${b.logo}">` : '🏡';
+  /* بوابة الموظفين: العنوان واسم شاشة الدخول عبارةُ البوابة — تُعاد بعد كل تطبيق هوية حتى لا يمسحها السحب */
+  if(STAFF_MODE) applyStaffChrome();
 }
 let pendingLogo = undefined;
 document.getElementById('brandLogoFile').addEventListener('change', e=>{
@@ -2197,6 +2216,8 @@ const VIEWS = [
 ];
 /* الصفحة الأولى التي يراها كل موظف: أول صفحة تسمح لها وظيفته بفتحها — ولوحة كل كيان مستقلة عن الآخرى */
 function viewVisible(v){
+  /* بوابة الموظفين: مجموعة «الإدارة والرقابة» للمالك في رابطه الرئيسي وحده — لا تُبنى ولا تُفتح من رابط الموظفين */
+  if(STAFF_MODE && v.grp === 'admin') return false;
   if(!currentUser) return !v.perm;
   if(v.perm === '*owner*') return currentUser.role === 'owner';
   if(v.perm) return can(v.perm);
@@ -2286,6 +2307,7 @@ async function cloudJoin(){
   if(!r || r.error){ joinMsg('⛔ تعذّر الوصول للعقدة' + (r && r.error ? ' ('+r.error+')' : '') + ' — راجع الرابط والرمز، وفعّل القراءة في قواعد Firebase.'); return; }
   if(!db.users.length){ joinMsg('⚠️ العقدة وصلت لكنها بلا موظفين — ليطلب المالك «رفع» من جهازه أولاً ثم أعد السحب.'); return; }
   joinMsg('✅ السحابة: الحسابات ' + db.users.length + ' · الحجوزات ' + db.bookings.length + ' · الوحدات ' + db.rooms.length + ' — سجّل باسمك وكلمتك، وصلاحياتك معك.');
+  if(STAFF_MODE) applyStaffChrome();
   const f = document.getElementById('loginUser'); if(f) f.focus();
 }
 /* إعادة فتح جهاز مربوط من قبل: السحب يسبق الدخول حتى لا يرى الموظف سجلاً أقدم من جهاز زميله */
@@ -2318,12 +2340,83 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) saveSes
 /* ================= FIRST-RUN SETUP =================
    لا موظفون افتراضيون ولا كلمة مرور عامة: أول تشغيل يعرض شاشة تأسيس، والمالك الذي فيها هو الوحيد */
 function showSetup(){
+  if(STAFF_MODE){ bootStaffGate(); return; }
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('setupScreen').classList.add('on');
   setTimeout(()=>{ const f = document.getElementById('suBrand'); if(f) f.focus(); }, 120);
 }
+/* بوابة الموظفين: لا تأسيس ولا شاشات مالك هنا — إما إلحاق الجهاز بسحابة المالك أو دخول بالاسم والصفة */
+async function bootStaffGate(){
+  document.getElementById('setupScreen').classList.remove('on');
+  document.getElementById('loginScreen').style.display = 'flex';
+  applyStaffChrome();
+  if(db.users.length){
+    joinMsg('هذه بوابة الموظفين — سجّل باسمك وكلمتك، وصلاحياتك معك من أي جهاز.');
+    if(endpoint()){ await cloudSync({mode:'pull', silent:true}); if(cfg.auto) startPolling(); }
+    return;
+  }
+  const panel = document.getElementById('joinPanel');
+  if(panel && panel.style.display === 'none') toggleJoinPanel();
+  if(!endpoint()){
+    joinMsg('اكتب «رابط السحابة» و«رمز الوصول» كما هما في جهاز المالك — تصلك الحجوزات وأسماء الموظفين وصلاحيات كل واحد، ولا يُنشَأ على هذا الجهاز سجلٌّ جديد.');
+    setTimeout(()=>{ const f = document.getElementById('joinUrl'); if(f) f.focus(); }, 120);
+    return;
+  }
+  joinMsg('⏳ تُقرأ السحابة...');
+  const r = await cloudSync({mode:'pull', silent:true});
+  if(!r || r.error){ joinMsg('⛔ تعذّر الوصول للعقدة' + (r && r.error ? ' ('+r.error+')' : '') + ' — راجع الرابط والرمز مع المالك.'); return; }
+  if(db.users.length){ joinMsg('✅ هذا الجهاز مربوط بالعقدة وسحب أحدث الحجوزات — سجّل باسمك وكلمتك.'); if(cfg.auto) startPolling(); return; }
+  joinMsg('⚠️ العقدة وصلت لكنها بلا موظفين — ليضغط المالك «🔄 مزامنة الآن» في جهازه ثم أعد السحب.');
+}
+/* عنوان ونقاط شاشة الدخول في وضع الموظفين — نفس البطاقة، بلا وعود بشاشات لا يراها الموظف */
+function applyStaffChrome(){
+  if(!STAFF_MODE) return;
+  const name = document.getElementById('loginName');
+  if(name) name.textContent = 'بوابة موظفي ' + (db.brand && db.brand.name ? db.brand.name : 'الاستراحة');
+  const sub = document.querySelector('#loginScreen .hero-sub');
+  if(sub) sub.textContent = 'دخول الموظفين للحجز والفواتير والرسائل — الإعدادات والتأسيس للمالك في رابطه الرئيسي';
+  const pts = document.querySelector('#loginScreen .hero-points');
+  if(pts) pts.innerHTML = `<li>🔑 اسمك وكلمتك وصلاحياتك تعمل على أي جهاز تفتحه من هذا الرابط</li>
+      <li>⚡ حجزك يصل بقية الأجهزة في لحظته — ولا تُباع الليلة نفسها لموظفين</li>
+      <li>🧾 الفواتير والعقود ورسائل واتساب بنفس الأرقام التي في جهاز المالك</li>
+      <li>🚪 لا شاشة تأسيس ولا «⚙️ الإعدادات» ولا «👥 الموظفون» ولا «💾 النسخ» من هنا</li>`;
+  const card = document.querySelector('#loginScreen .login-card');
+  if(card && !document.getElementById('staffNote')){
+    const n = document.createElement('div');
+    n.id = 'staffNote'; n.className = 'lock-note';
+    n.innerHTML = '👑 <b>للمالك:</b> هذه بوابة الموظفين وحدهم. شاشات التأسيس والإعدادات والموظفين والنسخ الاحتياطي لا تُفتح من هذا الرابط — افتح الرابط الرئيسي للاستراحة (بدون <b dir="ltr" class="tl">/staff</b>) لتجدها كلها.';
+    card.appendChild(n);
+  }
+  /* العنوان تُقدَّمه عبارة البوابة بلا تكرار، وكيفما قُلِّب الرابط يرجع كما هو */
+  const base = String(document.title || '').replace(/^بوابة الموظفين — /, '');
+  document.title = 'بوابة الموظفين — ' + base;
+}
+/* مشتقّان من الرابط الذي فُتح به البرنامج الآن: فلا يُكتب رابط يدوي في الإعدادات ويخطئ */
+function mainHref(){
+  const clean = String(location.pathname || '/').replace(/\/+$/, '');
+  const base = /(^|\/)staff$/i.test(clean) ? clean.replace(/\/staff$/i, '') : clean;
+  return location.origin + (base ? base + '/' : '/');
+}
+function staffHref(){ return mainHref().replace(/\/+$/, '') + '/staff/'; }
+function staffHrefAlt(){ return mainHref().replace(/\/+$/, '') + '/?staff'; }
+function refreshStaffLink(){
+  const i = document.getElementById('staffLink');
+  if(i) i.value = staffHref();
+  const alt = document.getElementById('staffLinkAlt');
+  if(alt) alt.innerHTML = 'ولو لم يفتح خادمٌ هذا المسار، فنفس البوابة على <b dir="ltr" class="tl">' + esc(staffHrefAlt()) + '</b> — لا فرق في العمل، والبيانات لا تُخزَّن على الرابطَين.';
+}
+async function copyStaffLink(){
+  const link = staffHref();
+  try{ await navigator.clipboard.writeText(link); toast('✅ نُسخ رابط الموظفين: ' + link); }
+  catch(e){
+    const i = document.getElementById('staffLink');
+    if(i){ i.select(); try{ document.execCommand('copy'); toast('✅ نُسخ رابط الموظفين: ' + link); }catch(x){ toast('⛔ تعذّر النسخ — انسخه يدوياً من الحقل'); } }
+    else toast('⛔ تعذّر النسخ — انسخه يدوياً من الحقل');
+  }
+}
 function setupErr(msg){ const e = document.getElementById('setupError'); e.textContent = msg; e.style.display = 'block'; }
 async function finishSetup(){
+  if(STAFF_MODE){ document.getElementById('setupScreen').classList.remove('on'); bootStaffGate(); return; }
   const name  = String(document.getElementById('suBrand').value || '').trim().slice(0, 60);
   const owner = String(document.getElementById('suOwner').value || '').trim().slice(0, 40);
   const user  = String(document.getElementById('suUser').value || '').trim();
@@ -2472,6 +2565,7 @@ function buildNav(){
   }
   nav.querySelector('button').classList.add('active');
   document.getElementById('verTag').textContent = 'الإصدار '+VERSION;
+  refreshStaffLink();
   const stSel = document.getElementById('bkStatus');
   if(stSel.options.length < 2) stSel.innerHTML = '<option value="">كل الحالات</option>' + Object.entries(ST_LBL).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
   ['btnNewBooking','btnNewBookingV'].forEach(id=>{ document.getElementById(id).style.display = can('booking.create')?'':'none'; });
@@ -2480,7 +2574,8 @@ function buildNav(){
   document.getElementById('waHeroIcon').innerHTML = WA_MARK;
   document.getElementById('btnSaveSettings').style.display = can('settings.edit')?'':'none';
   document.getElementById('btnSaveWaTpl').style.display = can('settings.edit')?'':'none';
-  document.querySelectorAll('#view-settings input, #view-settings textarea').forEach(i=>{ i.disabled = !can('settings.edit'); });
+  /* رابط البوابة للاطلاع والنسخ حتى على من لا يحرّر الإعدادات: تعطيله يمنع نسخه من الحقل */
+  document.querySelectorAll('#view-settings input, #view-settings textarea').forEach(i=>{ if(i.id === 'staffLink') return; i.disabled = !can('settings.edit'); });
   const waSel = document.getElementById('setWaMode');
   if(waSel) waSel.disabled = !can('wa.send');
   const waSel2 = document.getElementById('waPageMode');
@@ -7033,8 +7128,8 @@ function removeUser(id){
 /* شاشة تنبيه واحدة (v5.11). اللافتات الخمس القديمة حُذفت لأن نصها يصف نماذج استُبدلت:
    «قسم الشاليهات» و«البرنامج نظامين» (v5.4/v5.5) و«بطاقات الأقسام لا تستجيب» (v5.9) —
    فكانت تعلّم العميل على سلوك لم يعد في البرنامج. الترحيلات نفسها باقية كما هي: المحذوف هو اللافتة لا العملية. */
-const VER_NOTES = ['v62','v61','v60','v512','v511','v510'];
-const VER_NOTE_FN = {v62: 'noteV62', v61: 'noteV61', v60: 'noteV600', v512: 'noteV512', v511: 'noteV511', v510: 'noteV510'};
+const VER_NOTES = ['v63','v62','v61','v60','v512','v511','v510'];
+const VER_NOTE_FN = {v63: 'noteV63', v62: 'noteV62', v61: 'noteV61', v60: 'noteV600', v512: 'noteV512', v511: 'noteV511', v510: 'noteV510'};
 function verNoteOf(){
   /* جهاز جديد تأسس فارغاً على النموذج الحالي: لا شيء وُضع له من ترحيل، فلا لافتة «بياناتك عند الترحيل» عليه */
   const f = db.settings.v512;
@@ -7091,6 +7186,24 @@ function noteV600(m){
       <button class="btn btn-dark btn-sm" onclick="gotoView('dashVilla')">🏡 افتح لوحة الشاليهات</button>
       <button class="btn btn-gray btn-sm" onclick="gotoView('dashRest')">🏨 لوحة الاستراحة</button>
       <button class="btn btn-gray btn-sm" onclick="gotoView('reports')">📊 التقارير بأقسامها ومزاياها</button>
+      <button class="btn btn-gray btn-sm" onclick="dismissVersionNotice()">فهمت — أخفِ التنبيه</button>
+    </div></div>`;
+}
+function noteV63(m){
+  return `<div><b>🆕 v6.3 — بوابة موظفين برابط نظيف: لا تأسيس ولا شاشات مالك من رابطهم</b>
+    <ul>
+      <li>🚪 <b>رابط وحده للموظفين:</b> هو هذا البرنامج بنفس السجل، لكنه يفتح على شاشة دخولهم بلا «تأسيس النظام» وبلا «⚙️ الإعدادات» وبلا «☁️ المزامنة» وبلا «👥 الموظفون» وبلا «💾 النسخ الاحتياطي» وبلا «📋 سجل العمليات». رابطك أنت يبقى كما كان حرفياً — الحالة تُقرأ من الرابط في كل فتح ولا تُخزَّن في الجهاز.</li>
+      <li>🔗 <b>جهاز موظفٍ جديد:</b> بوابةُ الموظفين تفتحه مباشرة على «رابط السحابة + رمز الوصول» — لا شاشة تأسيس ولا استراحة ثانية على جهازه. يكتبهما مرة واحدة كما هما عند المالك، فتنزل الحسابات والحجوزات ويسجّل باسمه وكلمته بصلاحيات دوره.</li>
+      <li>📋 <b>الرابط لا يُكتب يدوياً:</b> انسخه من «⚙️ الإعدادات ← 🚪 بوابة الموظفين»؛ ومعك رابط احتياطي بنفس البوابة على صورة <b dir="ltr" class="tl">${esc(staffHrefAlt())}</b> للمضيف الذي لا يخدم المسارات الفرعية.</li>
+      <li>🔑 <b>الذي يحمي السجل لم يتغيّر:</b> كلمة مرور كل موظف وصفحات وظيفته. الرابط ترتيبٌ في الواجهة لا صلاحية — فمن فتح الرابط الرئيسي دخل كما كان، ولهذا يبقى الرابط الرئيسي عند المالك.</li>
+      <li><b>بياناتك عند الترحيل:</b> ${arCount(m.users,'موظف واحد','موظفان','موظفين','موظفًا')} و${arCount(m.liveBk,'حجز نشط واحد','حجزان نشطان','حجوزات نشطة','حجزاً نشطاً')} و${arCount(m.inv,'فاتورة واحدة','فاتورتان','فواتير','فاتورة')} — <b>لم يتغيّر سجل ولا مبلغ ولا صلاحية</b>؛ الجديد في واجهة هذا الجهاز صفحةُ بوابةٍ للموظفين وحدها.${STAFF_MODE ? ' أنت الآن داخل بوابة الموظفين، وشاشات المالك لا تظهر هنا بنية التصميم.' : ''}</li>
+    </ul>
+    <div class="nv-actions">
+      ${STAFF_MODE
+        ? `<button class="btn btn-dark btn-sm" onclick="gotoView('bookings')">🗂️ سجل الحجوزات</button>
+           <button class="btn btn-gray btn-sm" onclick="gotoView('calendar')">📅 تقويم الحجوزات</button>`
+        : `<button class="btn btn-dark btn-sm" onclick="gotoView('settings')">🚪 انسخ رابط الموظفين</button>
+           <button class="btn btn-gray btn-sm" onclick="copyStaffLink()">📋 نسخ رابط البوابة</button>`}
       <button class="btn btn-gray btn-sm" onclick="dismissVersionNotice()">فهمت — أخفِ التنبيه</button>
     </div></div>`;
 }
@@ -7508,6 +7621,17 @@ function migrateV62(){
   audit('تحديث v6.2', 'ربط الأجهزة المتعددة: رفع مشروط بالطابع، سماع فوري، وبوابة تحقّق قبل الحفظ. بياناتك: '
     + sum.users + ' موظف، و' + sum.liveBk + ' حجزاً نشطاً، و' + sum.inv + ' فاتورة — لا سجل ولا مبلغ ولا صلاحية تغيّرت.');
   stampMissingPasswords();
+  return sum;
+}
+/* ترحيل v6.3: واجهة فقط — بوابة موظفين برابط نظيف. لا تمسّ سجلاً ولا مبلغاً ولا صلاحية */
+function migrateV63(){
+  const m = db.settings.v63;
+  if(m && m.at) return m;
+  const sum = {at:new Date().toISOString(), fresh:!db.users.length, users:(db.users||[]).length,
+    liveBk:(db.bookings||[]).filter(liveBk).length, inv:(db.invoices||[]).length};
+  db.settings.v63 = sum; save();
+  audit('تحديث v6.3', 'بوابة موظفين برابط /staff: شاشة دخول بلا تأسيس، وشاشات المالك (الإعدادات والمزامنة والموظفون والنسخ وسجل العمليات) لا تظهر فيها. بياناتك: '
+    + sum.users + ' موظف، و' + sum.liveBk + ' حجزاً نشطاً، و' + sum.inv + ' فاتورة — لا سجل ولا مبلغ ولا صلاحية تغيّرت.');
   return sum;
 }
 /* بصمات الدخول تُحسب بعد التأسيس بلا انتظار: الصامتن عن الحساب لا يُطرَدن من أجهزتهن */
@@ -8372,12 +8496,15 @@ migrateV511();
 migrateV512();
 migrateV60();
 migrateV61();
-migrateV62();applyBrand();
+migrateV62();migrateV63();applyBrand();
 initLoginScreen();
+applyStaffChrome();
 applyNavHidden();
-/* جهاز جديد بلا حسابات: ربطٌ محفوظ عندئذٍ سحبٌ أول، وإلا شاشة تأسيس. لا موظفون افتراضيون بكلمة واحدة */
+/* جهاز جديد بلا حسابات: ربطٌ محفوظ عندئذٍ سحبٌ أول، وإلا شاشة تأسيس. لا موظفون افتراضيون بكلمة واحدة
+   وبوابة /staff لا تعرف التأسيس إطلاقاً — الموظف يلحق بسحابة سيده أو يسجّل */
 if(!db.users.length){
-  if(endpoint()) bootJoin(); else showSetup();
+  if(STAFF_MODE) bootStaffGate();
+  else if(endpoint()) bootJoin(); else showSetup();
 }
 bkInit();
 if(restoreSession()){
