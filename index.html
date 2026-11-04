@@ -68,6 +68,14 @@ body::before{content:''; position:fixed; inset:0; z-index:-1; pointer-events:non
 .login-opt label{display:flex; align-items:center; gap:7px; cursor:pointer;}
 .login-opt .hint{font-size:11px; color:#6c6284;}
 #loginCaps{display:none; margin-top:9px; font-size:11.5px; color:#7a5312; background:#fdf6e8; border:1px solid #ecdcb8; border-radius:10px; padding:8px 11px; text-align:center;}
+.join-box{position:relative; margin-top:12px; border-top:1px solid rgba(122,79,184,.18); padding-top:11px;}
+.join-toggle{width:100%; background:#f6f1fb; border:1px dashed #cbb6e4; border-radius:12px; padding:10px 12px; font-size:12.5px; font-weight:700; color:#4b2e70; cursor:pointer; line-height:1.6;}
+.join-toggle:hover{background:#efe6f8;}
+.join-box #joinPanel{margin-top:11px; display:flex; flex-direction:column; gap:9px;}
+.join-box #joinPanel .form-row{margin:0;}
+.join-box #joinPanel label{font-size:12px; font-weight:700; color:#4b3a63;}
+.join-box #joinPanel input{width:100%; padding:10px 12px; border:1px solid #d9cdea; border-radius:11px; font-size:13.5px; background:#fff;}
+.join-box #joinMsg{font-size:12px; line-height:1.8; color:#3f2b58; font-weight:600; text-align:center;}
 .credit{position:relative; color:var(--accent-soft); font-size:12.5px; text-align:center; line-height:2; letter-spacing:.2px;}
 .credit b{color:#fff; font-weight:700;}
 @media (max-width:880px), (max-height:560px){
@@ -482,7 +490,16 @@ nav button .ico svg{width:19px; height:19px; display:block; margin:0 auto; verti
       <div id="loginCaps">⌨️ Caps Lock مفعّل — كلمة المرور حساسة لحالة الأحرف</div>
       <div id="loginError" class="alert-err" style="display:none;">بيانات الدخول غير صحيحة</div>
       <button class="btn-login" onclick="doLogin()">🔓 تسجيل الدخول</button>
-      <div class="lock-note">🔒 كلمة المرور تُحفظ في متصفح هذا الجهاز وحده ولا تسافر مع المزامنة السحابية — الجلسة تُستأنف تلقائياً حتى 12 ساعة من آخر استخدام، و«🚪 تسجيل الخروج» يُغلقها فوراً</div>
+      <div class="lock-note">🔒 كلمة مرورك تبقى مكتوبة في متصفح هذا الجهاز وحده؛ الذي يسافر مع المزامنة هو بصمتها فقط — فتحصل على دخولك وصلاحياتك في أي جهاز ربطته بنفس العقدة. الجلسة تُستأنف تلقائياً حتى 12 ساعة من آخر استخدام، و«🚪 تسجيل الخروج» يُغلقها فوراً</div>
+      <div class="join-box">
+        <button type="button" class="join-toggle" onclick="toggleJoinPanel()">🔗 جهاز جديد؟ اربطه بالسحابة لتصلك الحجوزات والموظفون وصلاحيات كل واحد</button>
+        <div id="joinPanel" style="display:none;">
+          <div class="form-row"><label>رابط السحابة</label><input id="joinUrl" dir="ltr" class="tl" placeholder="https://xxxxx.firebaseio.com" autocomplete="off" spellcheck="false"></div>
+          <div class="form-row"><label>رمز الوصول</label><input id="joinToken" dir="ltr" class="tl" placeholder="الرمز الذي أعطاك المالك إياه" autocomplete="off" spellcheck="false"></div>
+          <button class="btn btn-dark" style="width:100%; padding:11px;" onclick="cloudJoin()">⬇️ اسحب الحجوزات والموظفين</button>
+        </div>
+        <div id="joinMsg" class="hint"></div>
+      </div>
     </div>
   </div>
   <div class="credit">تصميم وتطوير: <b>م. علاء علي</b><br>📞 الدعم الفني: <b dir="ltr">0100474389</b></div>
@@ -501,7 +518,8 @@ nav button .ico svg{width:19px; height:19px; display:block; margin:0 auto; verti
     <div class="form-row"><label>واتساب الاستراحة (اختياري)</label><input id="suWa" placeholder="05xxxxxxxx" inputmode="numeric" maxlength="14" autocomplete="off" dir="ltr" class="tl"></div>
     <div id="setupError" class="alert-err" style="display:none;"></div>
     <button class="btn btn-dark" style="width:100%; padding:12px;" onclick="finishSetup()">✅ أنشئ النظام وابدأ</button>
-    <div class="lock-note">🔒 لا حجوزات ولا عملاء ولا غرف جاهزة. بيانات العرض التجريبية تنزل بضغطة من صفحة الإعدادات إن أحببت تجربة النظام أولاً، وكل شيء بعدها من تدخيلك. كلمة المرور تُحفظ على هذا الجهاز وحده.</div>
+    <button type="button" class="join-toggle" style="margin-top:10px;" onclick="setupToJoin()">🔗 هذا الجهاز لموظف في استراحة موجودة؟ اربطه بسحابة المالك بدل التأسيس</button>
+    <div class="lock-note">🔒 لا حجوزات ولا عملاء ولا غرف جاهزة. بيانات العرض التجريبية تنزل بضغطة من صفحة الإعدادات إن أحببت تجربة النظام أولاً، وكل شيء بعدها من تدخيلك. كلمة المرور تُكتب على هذا الجهاز وحده، ويُسافر بصمتها فقط مع المزامنة.</div>
   </div>
   <div class="credit">تصميم وتطوير: <b>م. علاء علي</b><br>📞 الدعم الفني: <b dir="ltr">0100474389</b></div>
 </div>
@@ -1089,9 +1107,9 @@ nav button .ico svg{width:19px; height:19px; display:block; margin:0 auto; verti
       <button class="btn btn-gray btn-sm" onclick="gotoView('chalets')">🏡 الشاليهات</button>
     </div>
   </div>
-  <div class="panel" style="max-width:560px;">
-    <h3>☁️ المزامنة السحابية — العمل من أي جهاز عبر الإنترنت</h3>
-    <p class="hint" style="margin-bottom:10px;">اربط النظام بقاعدة بيانات Firebase المجانية. كلمات مرور الموظفين <b>لا تُرفع للسحابة</b> — تُحفظ على كل جهاز محلياً.</p>
+  <div class="panel" style="max-width:760px;">
+    <h3>☁️ المزامنة السحابية — كل الأجهزة على نفس السجل</h3>
+    <p class="hint" style="margin-bottom:10px;">اكتب <b>نفس الرابط ونفس رمز الوصول</b> في جهاز كل موظف: فتصير الحجوزات شاشة واحدة مشتركة، ومن يحجز شاليهاً قبل غيرَه يجده محجوزاً عنده لا متاحاً. كلمة المرور تُرفع <b>بهاشها</b> لا نصّاً، فيتابعك دخولك وصلاحياتك أي جهاز فتحت منه؛ ومجلد النسخ وتفضيلات الشريط تبقى على جهازك وحده.</p>
     <div class="form-row"><label>رابط قاعدة البيانات (Database URL)</label><input id="cfgUrl" dir="ltr" class="tl" placeholder="https://your-project-default-rtdb.firebaseio.com"></div>
     <div class="form-row"><label>رمز الوصول (اسم العقدة في Firebase)</label>
       <div style="display:flex; gap:8px; align-items:center;">
@@ -1102,12 +1120,14 @@ nav button .ico svg{width:19px; height:19px; display:block; margin:0 auto; verti
     </div>
     <div class="form-row"><label style="font-weight:400; display:flex; align-items:center; gap:8px; cursor:pointer;">
       <input type="checkbox" id="cfgAuto" style="width:auto;" onchange="toggleAutoSync()">
-      <span>مزامنة تلقائية: سحب كل 30 ثانية ورفع بعد كل تعديل</span></label></div>
+      <span>ربط حيّ: سماع فوري لتعديلات الأجهزة الأخرى + رفع مشروط بعد كل تعديل (ودوري كل 30 ثانية احتياطاً)</span></label></div>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
       <button class="btn btn-dark" onclick="cloudPush()">🔄 مزامنة الآن (سحب + دمج + رفع)</button>
       <button class="btn btn-blue" onclick="cloudPull()">⬇️ سحب ودمج من السحابة</button>
+      <button class="btn btn-gray" onclick="cloudDiagnose()">🩺 فحص الاتصال بالسحابة</button>
     </div>
-    <p class="hint" style="margin-top:10px;">الدمج يتم سجلًا بسجل حسب الرقم التسلسلي، فلا يضيع حجز جهاز عند رفع جهاز آخر. السحب لم يعد يستبدل قاعدة البيانات.</p>
+    <p class="hint" style="margin-top:10px;">الحماية طبقتان: الدمج سجلٌ بسجل حسب الرقم التسلسلي وأحدث تعديل، والرفع مشروط بطابع النسخة المقروءة — فإذا كتب جهازٌ آخر في الأثناء يُرفض الرفع ويعيد الجهاز القراءة والدمج من جديد، فلا يُمحى حجز أحد فوق حجز أحد. والرفض يظهر قبل الحفظ: شاشة الحجز تقرأ السحابة أولاً فتعرف أن الليلة بيعت.</p>
+    <div id="cloudDiag" class="hint" style="margin-top:10px;"></div>
   </div>
   <div class="panel" style="max-width:560px;">
     <h3>💾 النسخ الاحتياطي المحلي</h3>
@@ -1518,7 +1538,7 @@ const CFG_KEY = 'chalet_sync_cfg_v1';
 const SESSION_KEY = 'chalet_erp_session_v1';
 const SESSION_TTL = 12*60*60*1000;
 const DEFAULT_PASS = '1234';
-const VERSION = 'v6.1';
+const VERSION = 'v6.2';
 const VAT = 0.15;
 const MAX_NIGHTS = 30;
 const FMT = 'ar-SA-u-nu-latn';
@@ -2004,8 +2024,10 @@ function normalize(x){
   (Array.isArray(x.users) ? x.users : []).forEach(u=>{
     if(!u || typeof u.username !== 'string' || seen.has(u.username)) return;
     seen.add(u.username);
+    /* حساب هاشه من السحابة وكلمته لم تُكتب على هذا الجهاز: لا «1234» احتياطية — وإلا دخل أحدهم باسم زميله من جهازه بكلمة عامة */
     out.users.push({id: u.id ?? (Date.now() + seen.size), name: String(u.name || u.username), username: u.username,
-      role: ROLE_KEYS.includes(u.role) ? u.role : 'reception', pass: u.pass == null ? DEFAULT_PASS : String(u.pass)});
+      role: ROLE_KEYS.includes(u.role) ? u.role : 'reception', pass: u.pass == null ? (String(u.ph || '') ? null : DEFAULT_PASS) : String(u.pass),
+      ph: String(u.ph || '').slice(0,64), pu: String(u.pu || '').slice(0,40)});
   });
   /* قائمة بلا موظفين لا تُرمِ موظفي هذا الجهاز: السحابة أو ملف تالف قد يرجعا بلا users —
      فمرجع الاسترجاع هو مستخدمو الجهاز أنفسهم (بعد التحميل هم في db مباشرة)، ولا يُخترع مستخدم افتراضي بكلمة مرور 1234 */
@@ -2014,7 +2036,8 @@ function normalize(x){
     if(!u || typeof u.username !== 'string' || !u.username.trim()) return;
     out.users.push({id: u.id ?? (Date.now() + out.users.length + 1), name: String(u.name || u.username),
       username: String(u.username).trim(), role: ROLE_KEYS.includes(u.role) ? u.role : 'reception',
-      pass: u.pass == null ? DEFAULT_PASS : String(u.pass)});
+      pass: u.pass == null ? (String(u.ph || '') ? null : DEFAULT_PASS) : String(u.pass),
+      ph: String(u.ph || '').slice(0,64), pu: String(u.pu || '').slice(0,40)});
   });
   if(!out.brand.name) out.brand.name = BOOT_BRAND || ((db && db.brand) ? strOf(db.brand.name, 60).trim() : '');
   ['guests','bookings','rooms','seasons','tasks','tickets','invoices','auditLog'].forEach(k=>{
@@ -2040,7 +2063,19 @@ const BOOT_USERS = (BOOT_RAW && Array.isArray(BOOT_RAW.users)) ? BOOT_RAW.users 
 const BOOT_BRAND = (BOOT_RAW && BOOT_RAW.brand && typeof BOOT_RAW.brand === 'object') ? strOf(BOOT_RAW.brand.name, 60).trim() : '';
 let db;
 try{ db = normalize(BOOT_RAW); }catch(e){ db = seed(); }
+/* الإعدادات واسم الاستراحة ملكُ من عدّلها، لا آخر من سحب: المزامنة تقرأ السحابة قبل أن ترفع،
+   فبلا هذا الختم ترجع نسبة العربون وقوالب واتساب إلى ما في السحابة لحظة أول مزامنة ويضيع تعديل المالك.
+   القياس على مفاتيح السحابة وحدها (cloudSettings) حتى لا تختمها لافتات النسخ والترحيل. */
+function cloudSettings(){ const s = db.settings || {};
+  return {weekday:s.weekday, weekend:s.weekend, deposit:s.deposit, half:s.half, terms:s.terms,
+    waBooking:s.waBooking, waInvoice:s.waInvoice, waAuto:s.waAuto, feats:s.feats}; }
+let LOCAL_SET = null;
+function localSettingsSig(){ return JSON.stringify([cloudSettings(), db.brand]); }
+function markLocalSettings(){ const sig = localSettingsSig(); if(LOCAL_SET !== null && sig !== LOCAL_SET) cfg.setDirty = true; LOCAL_SET = sig; }
+function resyncSettingsMark(){ LOCAL_SET = localSettingsSig(); }
+resyncSettingsMark();
 function save(){
+  markLocalSettings();
   try{ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
   catch(e){ toast('⚠️ تعذّر الحفظ — مساحة المتصفح ممتلئة. صدّر نسخة احتياطية ثم صفّر السجل القديم.'); return false; }
   queueAutoSync(); queueBackup();
@@ -2219,6 +2254,50 @@ function initLoginScreen(){
   if(kept){ u.value = kept; if(box) box.checked = true; const p = document.getElementById('loginPass'); setTimeout(()=>{ if(p) p.focus(); }, 120); }
   else setTimeout(()=>{ const f = document.getElementById('loginUser'); if(f) f.focus(); }, 120);
 }
+function joinMsg(m){ const el = document.getElementById('joinMsg'); if(el) el.textContent = m; }
+/* شاشة التأسيس تظهر أول تشغيل — والموظف الجديد لا يؤسس استراحة ثانية، بل يلحق بسحابة سيده */
+function setupToJoin(){
+  document.getElementById('setupScreen').classList.remove('on');
+  document.getElementById('loginScreen').style.display = 'flex';
+  const p = document.getElementById('joinPanel');
+  if(p && p.style.display === 'none') toggleJoinPanel();
+  joinMsg('اكتب الرابط ورمز الوصول نفسيهما في جهاز المالك — تصلك الوحدات والحجوزات واسمك وصلاحياتك.');
+  setTimeout(()=>{ const f = document.getElementById('joinUrl'); if(f) f.focus(); }, 80);
+}
+function toggleJoinPanel(){
+  const p = document.getElementById('joinPanel');
+  const open = p.style.display !== 'none';
+  p.style.display = open ? 'none' : '';
+  if(open){ joinMsg(''); return; }
+  document.getElementById('joinUrl').value = cfg.url || '';
+  document.getElementById('joinToken').value = cfg.token || '';
+  joinMsg(db.users.length ? 'هذا الجهاز فيه بيانات بالفعل — السحب يدمج، لا يمسح: لا تختفي حجوزاتك ولا تُستبدل بسحابة جهاز آخر.' : 'الرابط ورمز الوصول يعطيك إياهما المالك — نفس ما هو مكتوب في جهازه.');
+  setTimeout(()=>{ const f = document.getElementById(cfg.url ? 'joinToken' : 'joinUrl'); if(f) f.focus(); }, 80);
+}
+/* جهاز موظف جديد: السحب قبل الدخول — بلا هذا لا يجد اسمه ولا صلاحياته في أول تشغيل على هذا الجهاز */
+async function cloudJoin(){
+  const url = String(document.getElementById('joinUrl').value || '').trim().replace(/\/+$/,'');
+  const token = String(document.getElementById('joinToken').value || '').trim();
+  if(!validUrl(url)){ joinMsg('⛔ الرابط غير صحيح — يبدأ بـ https:// ولا يحمل مسافات'); return; }
+  if(!validToken(token)){ joinMsg('⛔ رمز الوصول 6 أحرف فأكثر: إنجليزي وأرقام و- _ فقط، بلا نقاط ولا /'); return; }
+  cfg.url = url; cfg.token = token; cfg.auto = true; saveCfg();
+  joinMsg('⏳ تُقرأ السحابة...');
+  const r = await cloudSync({mode:'pull'});
+  if(!r || r.error){ joinMsg('⛔ تعذّر الوصول للعقدة' + (r && r.error ? ' ('+r.error+')' : '') + ' — راجع الرابط والرمز، وفعّل القراءة في قواعد Firebase.'); return; }
+  if(!db.users.length){ joinMsg('⚠️ العقدة وصلت لكنها بلا موظفين — ليطلب المالك «رفع» من جهازه أولاً ثم أعد السحب.'); return; }
+  joinMsg('✅ السحابة: الحسابات ' + db.users.length + ' · الحجوزات ' + db.bookings.length + ' · الوحدات ' + db.rooms.length + ' — سجّل باسمك وكلمتك، وصلاحياتك معك.');
+  const f = document.getElementById('loginUser'); if(f) f.focus();
+}
+/* إعادة فتح جهاز مربوط من قبل: السحب يسبق الدخول حتى لا يرى الموظف سجلاً أقدم من جهاز زميله */
+async function bootJoin(){
+  await cloudSync({mode:'pull', silent:true});
+  if(db.users.length){
+    joinMsg('✅ هذا الجهاز مربوط بالعقدة وسحب أحدث الحجوزات — سجّل باسمك وكلمتك.');
+    if(cfg.auto) startPolling();
+    return;
+  }
+  showSetup();
+}
 function saveSession(){
   if(!currentUser) return;
   try{ localStorage.setItem(SESSION_KEY, JSON.stringify({id:currentUser.id, at:Date.now(), view:sessionView})); }catch(e){}
@@ -2244,7 +2323,7 @@ function showSetup(){
   setTimeout(()=>{ const f = document.getElementById('suBrand'); if(f) f.focus(); }, 120);
 }
 function setupErr(msg){ const e = document.getElementById('setupError'); e.textContent = msg; e.style.display = 'block'; }
-function finishSetup(){
+async function finishSetup(){
   const name  = String(document.getElementById('suBrand').value || '').trim().slice(0, 60);
   const owner = String(document.getElementById('suOwner').value || '').trim().slice(0, 40);
   const user  = String(document.getElementById('suUser').value || '').trim();
@@ -2261,6 +2340,8 @@ function finishSetup(){
   if(wa) db.brand.wa = wa;
   db.users = [{id:1, name:owner, username:user, role:'owner', pass:String(pass)}];
   currentUser = db.users[0];
+  /* هاش الدخول يُحسب فور التأسيس: لو ربط المالك سحابةً بعد أسبوع، جهاز موظفٍ جديد لا يطرد المالك */
+  if(hashReady()){ try{ await stampCredential(db.users[0]); }catch(e){} }
   if(!save()){ db.users = []; currentUser = null; return setupErr('تعذّر الحفظ — مساحة المتصفح ممتلئة على هذا الجهاز'); }
   document.getElementById('setupScreen').classList.remove('on');
   sessionView = homeView(); saveSession();
@@ -2277,7 +2358,12 @@ function doLogin(){
   }
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
-  const user = db.users.find(x=>x.username===u && x.pass===p);
+  loginVerify(u, p);
+}
+/* الدخول يقبل كلمة هذا الجهاز أو هاش كلمة الموظف الذي رفعته السحابة — فلا يطردك جهازٌ جديد */
+async function loginVerify(u, p){
+  let user = null;
+  for(const x of db.users){ if(x.username === u && await credentialMatches(x, p)){ user = x; break; } }
   if(!user){
     document.getElementById('loginPass').value='';
     failCount++;
@@ -2302,11 +2388,13 @@ function doLogin(){
   document.getElementById('loginPass').value='';
   audit('تسجيل دخول', 'دخول ناجح إلى النظام');
   enterApp();
-  if(cfg.auto) startPolling();
+  /* أول ما يدخل الموظف: سجلّ طريّ — لا قائمة عمرها نصف دقيقة */
+  if(cfg.auto){ startPolling(); cloudSync({mode:'pull', silent:true}); }
   if(p === DEFAULT_PASS) setTimeout(()=>toast('⚠️ هذه كلمة المرور الافتراضية — غيّرها من صفحة الموظفون قبل ربط السحابة'), 600);
 }
 function doLogout(){
   audit('تسجيل خروج', 'خروج من النظام');
+  stopStream(); stopPolling();
   currentUser = null;
   clearSession();
   document.getElementById('app').classList.remove('on');
@@ -2448,21 +2536,30 @@ function findGuest(phone){ const p = normalizePhone(phone); return db.guests.fin
 function genId(list){ let id = Date.now()*100 + Math.floor(Math.random()*100); while(list.some(r=>r.id===id)) id++; return id; }
 
 /* ================= CLOUD SYNC (Firebase) ================= */
-let cfg = {url:'', token:'', auto:false, rev:0, waMode:'web', waKey:''};
+/* etag قيمة device-local لحدها: طابع آخر قراءة، لا يغادر الجهاز ولا يُرفع في الحمولة */
+let cfg = {url:'', token:'', auto:false, rev:0, waMode:'web', waKey:'', etag:'', setDirty:false};
 function loadCfg(){
   let c;
   try{ c = JSON.parse(localStorage.getItem(CFG_KEY)) || {}; }catch(e){ c = {}; }
   if(!c.url && db.settings.fbUrl){ c.url = db.settings.fbUrl; c.token = 'chalet'; }
   if(!c.token) c.token = '';
   return {url:c.url||'', token:c.token||'', auto:!!c.auto, rev:c.rev||0, waMode:c.waMode==='app' ? 'app' : 'web',
-          waKey: String(c.waKey||'').slice(0,64), noticeSeen: String(c.noticeSeen||'').slice(0,40)};
+          waKey: String(c.waKey||'').slice(0,64), noticeSeen: String(c.noticeSeen||'').slice(0,40),
+          etag: String(c.etag||'').slice(0,80),
+          /* ختم «المالك عدّل إعداداته هنا ولم ترفع بعد» يبقى عبر إعادة التشغيل: بلا خسارة التعديل */
+          setDirty: c.setDirty === true};
 }
 function saveCfg(){ localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
 cfg = loadCfg();
 delete db.settings.fbUrl; delete db.settings.fbSecret;
 
 function validToken(t){ return /^[A-Za-z0-9_-]{6,64}$/.test(t); }
-function validUrl(u){ return /^https:\/\/[A-Za-z0-9.\-]{4,253}(:\d{2,5})?(\/[A-Za-z0-9._~%\-\/]*)?$/.test(u) && !/\s/.test(u); }
+/* https لكل ما هو خارج الجهاز؛ وhttp مقبول على 127.0.0.1/localhos فقط — عقدة اختبار على نفس الجهاز، لا بيانات تعبر شبكة */
+function validUrl(u){
+  if(!u || /\s/.test(u)) return false;
+  if(/^https:\/\/[A-Za-z0-9.\-]{4,253}(:\d{2,5})?(\/[A-Za-z0-9._~%\-\/]*)?$/.test(u)) return true;
+  return /^http:\/\/(127\.0\.0\.1|localhost)(:\d{2,5})?(\/[A-Za-z0-9._~%\-\/]*)?$/.test(u);
+}
 function newToken(){
   if(!requirePerm('*')) return;
   const alphabet = 'abcdefghijkmnopqrstuvwxyz23456789';
@@ -2482,6 +2579,20 @@ function endpoint(){
   return `${cfg.url}/${cfg.token}.json`;
 }
 
+/* ---- تجزئة كلمة المرور: SHA-256 الأصلي في المتصفح، والنص لا يُرفع ولا يُطبع ---- */
+function hashReady(){ return !!(window.crypto && crypto.subtle && typeof TextEncoder === 'function'); }
+async function passHash(username, pass){
+  const buf = await crypto.subtle.digest('SHA-256',
+    new TextEncoder().encode('chalet-erp/v6.2/' + String(username||'').toLowerCase() + '\u0001' + String(pass==null?'':pass)));
+  return Array.from(new Uint8Array(buf), b=> b.toString(16).padStart(2,'0')).join('');
+}
+/* اسم المستخدم هو الملح: تسريب هاش موظف لا يفكّ هاش موظف آخر */
+async function stampCredential(u){ u.ph = await passHash(u.username, u.pass != null ? u.pass : DEFAULT_PASS); u.pu = new Date().toISOString(); return u; }
+async function credentialMatches(u, p){
+  if(u.pass != null && u.pass === p) return true;
+  return !!u.ph && (await passHash(u.username, p)) === u.ph;
+}
+
 function stampOf(r){ return r.updatedAt || r.issuedAt || r.createdAt || r.t || ''; }
 function mergeList(local, remote){
   const map = new Map((local||[]).map(r=>[r.id, r]));
@@ -2499,7 +2610,10 @@ function mergeAudit(local, remote){
 }
 function applyRemote(raw){
   const remote = normalize(raw);
-  const state = () => JSON.stringify([db.bookings, db.rooms, db.sections, db.properties, db.seasons, db.tasks, db.tickets, db.invoices, db.guests, db.auditLog]);
+  /* السجلات وحدها لا تكفي لتقرير «هل تغيّر شيء»: بصمة كلمة مررتها، واسم الاستراحة، وإعدادات صاحب الجهاز كلها تسافر في السحابة.
+     لو اقتصر القياس على السجلات عاد السحب بلا حفظٍ ولا رسم، فتنقلب البصمة بعد إعادة التشغيل إلى القديمة ويَسقط منع كلمة الزميل المُلغاة. */
+  const state = () => JSON.stringify([db.bookings, db.rooms, db.sections, db.properties, db.seasons, db.tasks, db.tickets, db.invoices, db.guests, db.auditLog,
+    db.users.map(u=>[u.username, u.role, String(u.ph||''), String(u.pu||''), u.pass===null?'N':'L'].join(':')), db.brand, db.settings, db.seq]);
   const before = state();
   db.guests = mergeList(db.guests, remote.guests);
   db.bookings = mergeList(db.bookings, remote.bookings);
@@ -2515,14 +2629,20 @@ function applyRemote(raw){
   const ukey = u => String(u.username||'').toLowerCase();
   const localPass = new Map(db.users.map(u=>[ukey(u), u.pass]));
   const localRole = new Map(db.users.map(u=>[ukey(u), u.role]));
+  const localPh = new Map(db.users.map(u=>[ukey(u), {ph:String(u.ph||'').slice(0,64), pu:String(u.pu||'').slice(0,40)}]));
   if(Array.isArray(raw.users)){
     /* دمج بدل الاستبدال: موظف أُنشئ على هذا الجهاز ولم يصله السحب بعد لا يختفي فيُطرد من الدخول */
     const merged = new Map(db.users.map(u=>[ukey(u), u]));
     remote.users.forEach(ru=>{
       const k = ukey(ru);
+      const mine = localPh.get(k) || {ph:'', pu:''};
+      const theirs = {ph:String(ru.ph||'').slice(0,64), pu:String(ru.pu||'').slice(0,40)};
+      /* أحدث تغيير هو صاحب الكلمة: من غيّر المرور بعد رفعتك لا يعود لجهازٍ كلمةٍ قديمة */
+      const cred = theirs.ph && theirs.pu >= mine.pu ? theirs : mine;
       merged.set(k, { ...ru,
         role: (localRole.get(k) === 'owner' && ru.role !== 'owner') ? 'owner' : ru.role,
-        pass: localPass.get(k) || DEFAULT_PASS });
+        pass: localPass.has(k) ? localPass.get(k) : (theirs.ph ? null : DEFAULT_PASS),
+        ph: cred.ph, pu: cred.pu });
     });
     db.users = [...merged.values()];
   }
@@ -2530,81 +2650,238 @@ function applyRemote(raw){
     const again = db.users.find(x=>x.id===currentUser.id) || db.users.find(x=>ukey(x)===ukey(currentUser));
     if(again) currentUser = again;
   }
-  if(raw.brand && typeof raw.brand === 'object') db.brand = remote.brand;
-  if(raw.settings && typeof raw.settings === 'object'){
-    /* سحابة أقدم من v4.9 لا تحمل إعدادات الإرسال التلقائي: لا تُلغِ ما ضبطه هذا الجهاز */
-    const hadAuto = !!(raw.settings.waAuto && typeof raw.settings.waAuto === 'object');
-    const localAuto = hadAuto ? null : db.settings.waAuto;
+  if(raw.brand && typeof raw.brand === 'object' && !cfg.setDirty){
+    /* كمفاتيح الإعدادات بالضبط: حقل لم ترفعه السحابة لا يُستبدل بافتراضي normalize وإلا مُحِي ضريبة الجهاز أو رقم واتسابه */
+    const b = {};
+    Object.keys(remote.brand).forEach(k=>{ if(Object.prototype.hasOwnProperty.call(raw.brand, k)) b[k] = remote.brand[k]; });
+    db.brand = {...db.brand, ...b};
+  }
+  if(raw.settings && typeof raw.settings === 'object' && !cfg.setDirty){
+    /* المفاتيح التي رفعتها السحابة فعلاً فقط: سحابة كتبها إصدار أقدم لا تحمل feats ولا terms،
+       وتمريرها على normalize يملؤها بالافتراضي، فيمسح قائمة مزايا المالك وقوالبه من الجهاز ثم يرفعها ممحوّة. */
+    const s = {};
+    Object.keys(remote.settings).forEach(k=>{ if(Object.prototype.hasOwnProperty.call(raw.settings, k)) s[k] = remote.settings[k]; });
     /* المجلد وآخر موعد نسخة حقائق هذا الجهاز وحده: سحب سحابة جهازٍ آخر لا يُبدّلها ولا يُسكِت نسخته */
-    const localBk = db.settings.backups;
-    db.settings = {...db.settings, ...remote.settings};
-    if(localAuto) db.settings.waAuto = localAuto;
-    db.settings.backups = localBk;
+    if(Object.prototype.hasOwnProperty.call(raw.settings, 'backups')) delete s.backups;
+    db.settings = {...db.settings, ...s};
   }
   if(raw.seq && typeof raw.seq === 'object') Object.keys(remote.seq).forEach(k=>{ db.seq[k] = Math.max(db.seq[k]||0, remote.seq[k]||0); });
+  /* ما جاء من السحابة ليس تعديلًا محليًا: يُعاد ضبط الختم كي لا يرفعه الجهاز بعد قليل كأنه خُلع عليه */
+  resyncSettingsMark();
   return before !== state();
 }
 function cloudPayload(rev){
   return {
-    meta:{rev, pushedAt:new Date().toISOString(), by:currentUser?currentUser.username:'—'},
+    meta:{rev, pushedAt:new Date().toISOString(), by:currentUser?currentUser.username:'—', ver:VERSION},
     brand:db.brand,
-    settings:{weekday:db.settings.weekday, weekend:db.settings.weekend, deposit:db.settings.deposit, half:db.settings.half,
-      terms:db.settings.terms, waBooking:db.settings.waBooking, waInvoice:db.settings.waInvoice, waAuto:db.settings.waAuto,
-      feats:db.settings.feats},
+    settings:cloudSettings(),
     seq:db.seq,
-    users:db.users.map(u=>({id:u.id, name:u.name, username:u.username, role:u.role})),
+    /* الهاش فقط: النص لا يغادر الجهاز، والدخول يتبع الموظف لأي جهاز ربطته بنفس العقدة */
+    users:db.users.map(u=>({id:u.id, name:u.name, username:u.username, role:u.role, ph:String(u.ph||''), pu:String(u.pu||'')})),
     guests:db.guests, rooms:db.rooms, sections:db.sections, properties:db.properties, seasons:db.seasons, bookings:db.bookings, tasks:db.tasks, tickets:db.tickets, invoices:db.invoices,
     auditLog:db.auditLog.slice(-500),
   };
 }
 
-let syncing = false, autoTimer = null, syncTimer = null;
+/* ================= الكتابة الذرّية والسماع اللحظي (v6.2) =================
+   كل جهاز يقرأ «طابع» النسخة الحالية ويرفع مشروطاً به (If-Match). لو كتب جهازٌ آخر
+   في الأثناء يرفض السيرفر الرفعة بكود 412، فيعيد الجهاز القراءة والدمج والمحاولة —
+   فلا يُمحى حجز جهازٍ فوق حجز جهازٍ آخر كما كان يحدث مع الرفع الأعمى. */
+const CAS = {mode:'', tag:'', reads:0, writes:0, races:0, ms:0, bytes:0, status:'', by:'', pushedAt:'',
+             cond:'', stream:'', probe:'', err:''};
+let syncing = false, syncAgain = null, autoTimer = null, syncTimer = null, casRetry = null, es = null, esTimer = null, committing = false;
+function cloudLive(){ return !!(cfg.auto && endpoint()); }
+/* قراءة طرية قبل الحجز الحسّاس: إن كانت دورة مزامنة جارية تنتظرها ثانيةً كحدٍّ أقصى ثم تقرأ بنفسها */
+async function freshCloudRead(){
+  for(let i=0; i<10 && syncing; i++) await new Promise(r=> setTimeout(r, 200));
+  return cloudSync({mode:'pull', silent:true});
+}
+function saveQuiet(){ try{ localStorage.setItem(DB_KEY, JSON.stringify(db)); }catch(e){} }
+function casUrl(withEtag){ return endpoint() + (CAS.mode === 'body' && withEtag ? '?_etag=inBody' : ''); }
+
+/* القراءة تطلب الطابع دائماً: X-Firebase-ETag هو الأسلوب الموثّق في فايربيز (الطابع في ترويسة ETag)،
+   وأسلوب «الطابع في الجسم» يُستخدم فقط مع نقطة تردّ به — ولو مُنع الترويسة بـ CORS تُعاد القراءة بلا ترويسة
+   فيكمل الجهاز عمله بدل أن يتعطّل الربط، ويُسجَّل أن الكتابة الذرّية غير متاحة هنا. */
+async function cloudRead(){
+  const u = casUrl(true);
+  let res;
+  try{
+    res = await fetch(u, {cache:'no-store', headers: CAS.mode === 'body' ? {} : {'X-Firebase-ETag':'true'}});
+  }catch(e){
+    CAS.cond = 'ترويسة X-Firebase-ETag حجبتها المتصفّح — قُرئت بلا شرط';
+    res = await fetch(u, {cache:'no-store'});
+  }
+  if(!res.ok) throw new Error('GET ' + String(res.status));
+  CAS.status = String(res.status);
+  const json = await res.json();
+  CAS.reads++;
+  if(json && typeof json === 'object' && !Array.isArray(json) && ('etag' in json) && ('body' in json)){
+    CAS.mode = 'body'; CAS.tag = String(json.etag || '');
+    return {raw: json.body == null ? null : json.body, tag:CAS.tag};
+  }
+  const h = res.headers.get('etag');
+  if(h){ CAS.mode = 'header'; CAS.tag = String(h); }
+  else { CAS.mode = 'none'; CAS.tag = ''; }
+  return {raw: json, tag: CAS.tag};
+}
+async function cloudWrite(payload, tag){
+  const headers = {'Content-Type':'application/json'};
+  const cond = !!(tag && (CAS.mode === 'body' || CAS.mode === 'header'));
+  if(cond) headers['If-Match'] = tag;
+  let res;
+  try{
+    res = await fetch(casUrl(cond), {method:'PUT', body:JSON.stringify(payload), headers});
+  }catch(e){
+    if(!cond) throw e;
+    /* نقطة لا تسمح بـ If-Match من المتصفح: يُعاد الرفع بلا شرط حتى لا يتعطّل العمل،
+       وتسجَّل الكتابة الذرّية غير متاحة ليقرأها المالك في لوحة التشخيص */
+    CAS.cond = 'ترويسة If-Match حجبتها المتصفّح — الرفع بلا شرط';
+    CAS.mode = 'none'; CAS.tag = '';
+    res = await fetch(casUrl(false), {method:'PUT', body:JSON.stringify(payload), headers:{'Content-Type':'application/json'}});
+  }
+  CAS.writes++; CAS.status = String(res.status);
+  let etag = res.headers.get('etag') || '';
+  if(!etag){ try{ const j = await res.json(); if(j && typeof j === 'object' && j.etag) etag = String(j.etag); }catch(e){} }
+  if(res.ok && etag){ CAS.tag = String(etag); if(CAS.mode !== 'body') CAS.mode = 'header'; }
+  return {ok:res.ok, status:res.status, tag:String(etag || '')};
+}
 function queueAutoSync(){ if(syncing || !cfg.auto) return; clearTimeout(autoTimer); autoTimer = setTimeout(()=>cloudSync({silent:true}), 2000); }
+function scheduleCasRetry(){ if(casRetry) return; casRetry = setTimeout(()=>{ casRetry = null; cloudSync({silent:true}); }, 20000); }
 async function cloudSync(opts = {}){
-  if(syncing) return;
+  /* دورة جارية: لا تُلغَ الطلبية بل تُصفّ ليأتي السحب المطلوب فعلاً — وإلا ظنّ الجهاز أنه محدَّث
+     بينما كلمة مروره سحبت من زميل أو حجزٌ أُقفل على جهاز آخر */
+  if(syncing){ syncAgain = opts; return null; }
   const ep = endpoint();
-  if(!ep){ if(!opts.silent) toast('⚠️ تحقّق من الإعدادات: الرابط يجب أن يبدأ بـ https:// ورمز الوصول 6 أحرف فأكثر (بدون نقاط أو /)'); return; }
+  if(!ep){ if(!opts.silent) toast('⚠️ تحقّق من الإعدادات: الرابط يجب أن يبدأ بـ https:// ورمز الوصول 6 أحرف فأكثر (بدون نقاط أو /)'); return null; }
   syncing = true;
   if(!opts.silent) toast('⏳ جارٍ المزامنة...');
+  let attempt = 0;
   try{
-    const res = await fetch(ep, {cache:'no-store'});
-    if(!res.ok) throw new Error(String(res.status));
-    const remote = await res.json();
-    let changed = false;
-    if(remote && remote.bookings && remote.users){
-      if(!opts.silent) await preRiskBackup('قبل سحب سحابي');
-      changed = applyRemote(remote);
-      cfg.rev = Math.max(cfg.rev, (remote.meta && remote.meta.rev) || 0);
+    for(;;){
+      attempt++;
+      const g = await cloudRead();
+      let changed = false;
+      if(g.raw && g.raw.bookings && g.raw.users){
+        if(!opts.silent && attempt === 1) await preRiskBackup('قبل سحب سحابي');
+        changed = applyRemote(g.raw);
+        CAS.by = (g.raw.meta && g.raw.meta.by) || '';
+        CAS.pushedAt = (g.raw.meta && g.raw.meta.pushedAt) || '';
+        CAS.probe = (g.raw.meta && g.raw.meta.ver) || '';
+        cfg.rev = Math.max(cfg.rev, (g.raw.meta && g.raw.meta.rev) || 0);
+      }
+      if(changed) renderAll();
+      if(opts.mode === 'pull'){
+        if(changed) saveQuiet();
+        if(!opts.silent) toast(changed ? '⬇️ سُحب ودمج — وصلت بيانات من جهاز آخر' : '⬇️ السحابة مطابقة لما على جهازك');
+        return {changed, pushed:false, cas:CAS.mode, attempts:attempt};
+      }
+      const r = await cloudWrite(cloudPayload(cfg.rev + 1), g.tag);
+      if(r.ok){
+        cfg.rev++; cfg.setDirty = false; saveCfg(); save();
+        if(!opts.silent) toast(changed ? '✅ تمت المزامنة — تم دمج بيانات جديدة' : '✅ تمت المزامنة — رفعت جهازك بلا أن يُمحى غيره');
+        else if(changed) toast('🔄 تحديث تلقائي: وصلت بيانات من جهاز آخر');
+        return {changed, pushed:true, cas:CAS.mode, attempts:attempt};
+      }
+      if(r.status === 412 || r.status === 409){
+        CAS.races++;
+        if(attempt < 4) continue;
+        /* لا رفع أعمى بعد أربع تصادمات: العمل محفوظ على الجهاز، والمحاولة تلقائياً بعد قليل */
+        if(!opts.silent) toast('⚠️ السحابة كانت تُكتب في نفس اللحظة — أعيد الدمج ' + attempt + ' مرات، وحفظك على جهازك سيُرفع تلقائياً بعد لحظات');
+        scheduleCasRetry();
+        return {changed, pushed:false, conflict:true, cas:CAS.mode, attempts:attempt};
+      }
+      throw new Error('PUT ' + String(r.status));
     }
-    cfg.rev++;
-    saveCfg(); save();
-    const put = await fetch(ep, {method:'PUT', body:JSON.stringify(cloudPayload(cfg.rev))});
-    if(!put.ok) throw new Error('PUT '+String(put.status));
-    if(changed) renderAll();
-    if(!opts.silent){
-      toast(changed ? '✅ تمت المزامنة — تم دمج بيانات جديدة' : '✅ تمت المزامنة — لا تغييرات من الطرف الآخر');
-    } else if(changed){
-      toast('🔄 تحديث تلقائي: وصلت بيانات من جهاز آخر');
-    }
-    if(cfg.auto) startPolling();
   }catch(e){
-    if(!opts.silent) toast(String(e.message).startsWith('PUT') ? '❌ الرفع مرفوض — فعّل .write في قواعد Firebase لنفس الرمز' : '❌ فشل الاتصال — تحقق من الرابط والرمز وقواعد Firebase');
-    else if(syncTimer) { clearInterval(syncTimer); syncTimer = null; setTimeout(startPolling, 30000); }
-  }finally{ syncing = false; }
+    const msg = String(e.message || '');
+    CAS.err = msg;
+    if(!opts.silent) toast(msg.startsWith('PUT') ? '❌ الرفع مرفوض — فعّل .write في قواعد Firebase لنفس الرمز' : '❌ فشل الاتصال — تحقق من الرابط والرمز وقواعد Firebase');
+    else if(syncTimer){ clearInterval(syncTimer); syncTimer = null; setTimeout(startPolling, 30000); }
+    return {changed:false, pushed:false, error:msg, cas:CAS.mode};
+  }finally{ syncing = false; const again = syncAgain; syncAgain = null; if(cfg.auto) startPolling();
+    if(again && endpoint() && currentUser) setTimeout(()=>{ if(!syncing) cloudSync(again); }, 150); }
 }
-function cloudPush(){ if(requirePerm('*')){ readCfgForm(); startPolling(); cloudSync(); } }
+/* سماع لحظي: فايربيز يرسل حدثاً لكل كتابة، فلا ينتظر الجهاز دورة الـ 30 ثانية */
+function queueStreamRead(){
+  clearTimeout(esTimer);
+  esTimer = setTimeout(()=>{ if(!syncing && currentUser && endpoint()) cloudSync({mode:'pull', silent:true}); }, 300);
+}
+function startStream(){
+  if(!cfg.auto || !endpoint() || !window.EventSource){ if(!cfg.auto) stopStream(); return; }
+  if(es) return;
+  try{
+    es = new EventSource(endpoint());
+    es.onopen = ()=>{ CAS.stream = 'متصل'; renderCloudDiag(); };
+    es.addEventListener('put', queueStreamRead);
+    es.addEventListener('patch', queueStreamRead);
+    es.onerror = ()=>{
+      CAS.stream = (es && es.readyState === 2) ? 'منقطع — يعتمد على السحب الدوري' : 'إعادة اتصال';
+      if(es && es.readyState === 2){ try{ es.close(); }catch(e){} es = null; }
+      renderCloudDiag();
+    };
+  }catch(e){ es = null; CAS.stream = 'لا يعمل في هذا المتصفح'; }
+}
+function stopStream(){ clearTimeout(esTimer); esTimer = null; if(es){ try{ es.close(); }catch(e){} es = null; } CAS.stream = 'متوقف'; }
+function cloudPush(){ if(requirePerm('*')){ readCfgForm(); startPolling(); startStream(); cloudSync(); } }
 function cloudPull(){ if(requirePerm('*')){ readCfgForm(); cloudSync({mode:'pull'}); } }
 function toggleAutoSync(){
   if(!requirePerm('*')) { document.getElementById('cfgAuto').checked = cfg.auto; return; }
   readCfgForm();
-  if(cfg.auto) cloudSync({silent:false}); else stopPolling();
+  if(cfg.auto) cloudSync({silent:false}); else { stopPolling(); stopStream(); }
 }
 function startPolling(){
   stopPolling();
   if(!cfg.auto || !endpoint()) return;
   syncTimer = setInterval(()=>{ if(currentUser && !syncing) cloudSync({silent:true}); }, 30000);
+  startStream();
 }
 function stopPolling(){ if(syncTimer){ clearInterval(syncTimer); syncTimer = null; } }
+
+/* تشخيص يُقاس على جهاز الموظف نفسه، لا افتراضات عن السيرفر */
+async function cloudDiagnose(){
+  if(!requirePerm('*')) return;
+  readCfgForm();
+  const ep = endpoint();
+  if(!ep){ toast('⚠️ أكمل الرابط والرمز أولاً'); return; }
+  const t0 = Date.now();
+  try{
+    const g = await cloudRead();
+    CAS.ms = Date.now() - t0;
+    CAS.bytes = JSON.stringify(g.raw || null).length;
+    CAS.by = (g.raw && g.raw.meta && g.raw.meta.by) || CAS.by;
+    CAS.pushedAt = (g.raw && g.raw.meta && g.raw.meta.pushedAt) || CAS.pushedAt;
+    CAS.probe = (g.raw && g.raw.meta && g.raw.meta.ver) || '';
+    /* اختبار غير كاتِب: If-None-Match بالطابع الحقيقي يجب أن يرد 304 — دليل أن النقطة تنفّذ الشروط */
+    if(CAS.tag){
+      const res2 = await fetch(casUrl(true), {cache:'no-store', headers:{'If-None-Match':CAS.tag}});
+      CAS.cond = res2.status === 304 ? 'مقبول (304)' : (res2.ok ? 'مُتجاهَل — السيرفر ردّ 200' : 'ردّ ' + res2.status);
+    } else CAS.cond = 'لا طابع — العقدة فارغة أو لا ترسل ETag';
+    toast(CAS.tag ? '✅ القياس: ' + CAS.ms + ' مللي ثانية، ' + (CAS.bytes/1024).toFixed(0) + ' كيلوبايت، الكتابة الذرّية '
+      + (CAS.mode === 'none' ? 'غير مدعومة على هذه النقطة' : 'متاحة') : '⚠️ العقدة لا ترد بطابع — راجع الرابط والرمز');
+  }catch(e){ CAS.err = String(e.message||''); toast('❌ تعذّر الاتصال: ' + CAS.err); }
+  renderCloudDiag();
+}
+function renderCloudDiag(){
+  const el = document.getElementById('cloudDiag'); if(!el) return;
+  const ep = endpoint();
+  const yes = '✅', no = '⛔', mid = '•';
+  const casTxt = CAS.mode === 'body' ? yes + ' مدعومة — الطابع في الجسم مع If-Match'
+    : CAS.mode === 'header' ? yes + ' مدعومة — الطابع في ترويسة ETag'
+    : CAS.mode === 'none' ? mid + ' ⚠️ غير مدعومة على هذه العقدة — لا تردّ بطابع، فالرفع يكتب الملف كاملاً: حماية أقل من محو حجز زميل، والدمج بالسجل باقٍ'
+    : mid + ' لم تُقرأ السحابة بعد على هذا الجهاز';
+  const rows = [
+    ['العقدة', ep ? yes + ' رابط ورمز صحيحان' : no + ' ناقصة — ضع الرابط ورمز الوصول'],
+    [ 'الوضع', cfg.auto ? yes + ' ربط حيّ: سماع فوري + رفع بعد كل تعديل (ودوري كل 30 ثانية احتياطاً)' : mid + ' يدوي — لا يرفع ولا يسحب إلا بالضغط'],
+    ['الكتابة الذرّية (بلا محو حجز)', casTxt],
+    ['شرط القراءة If-None-Match', CAS.cond || mid + ' لم يُقَس بعد — اضغط «فحص الاتصال»'],
+    ['السماع اللحظي', CAS.stream || (cfg.auto ? mid + ' لم يبدأ بعد' : 'متوقف')],
+    ['آخر رفعة من السحابة', CAS.pushedAt ? 'بواسطة ' + (CAS.by || '—') + ' — ' + fmtDateTime(CAS.pushedAt) + (CAS.probe ? ' (نسخة ' + CAS.probe + ')' : '') : mid + ' لم تُقرأ بعد'],
+    ['عداد هذا الجهاز', 'قراءات ' + CAS.reads + ' · كتابات ' + CAS.writes + ' · تصادمات أُعيد دمجها ' + CAS.races],
+    ['زمن وحجم آخر قياس', CAS.ms ? CAS.ms + ' مللي ثانية · ' + (CAS.bytes/1024).toFixed(0) + ' كيلوبايت · كود ' + CAS.status : mid + ' —'],
+    [CAS.err ? 'آخر خطأ' : 'ملاحظة', CAS.err ? '❌ ' + CAS.err : 'التصادم طبيعي عند الكتابة المتزامنة؛ الجهاز يعيد الدمج حتى 4 مرات ثم يحاول تلقائياً بعد 20 ثانية'],
+  ];
+  el.innerHTML = '<table><tbody>' + rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('') + '</tbody></table>';
+}
 
 /* ================= LOCAL BACKUP ================= */
 /* ================= AUTO BACKUP =================
@@ -5633,7 +5910,13 @@ document.getElementById('fPhone').addEventListener('input', e=>{
   } else h.textContent = 'زبون جديد — الصيغة: 05xxxxxxxx (10 أرقام)';
 });
 
-function saveBooking(){
+async function saveBooking(){
+  if(!requirePerm('booking.create')) return;
+  if(committing){ toast('⏳ تحقّق من السحابة جارٍ — لا تضغط مرتين'); return; }
+  committing = true;
+  try{ await saveBookingBody(); }finally{ committing = false; }
+}
+async function saveBookingBody(){
   if(!requirePerm('booking.create')) return;
   const name=document.getElementById('fName').value.trim();
   const phone=normalizePhone(document.getElementById('fPhone').value);
@@ -5730,42 +6013,83 @@ function saveBooking(){
     audit('منع حجز أقصر من حد الموسم', name+' — '+date+' — '+nights+' ليلة مقابل حد '+minStay.need+' في '+minStay.season.name);
     return;
   }
-  let conflict = null;
   const unitNames = units.map(unitTagOf).join(' + ');
-  if(sel === 'both'){
-    const busy = units.filter(u=> !roomFree(u.id, date, nights, type));
-    if(busy.length){
-      fail('كامل الاستراحة غير متاح لهذه الليالي — الغرف المشغولة: '+busy.map(unitTagOf).join('، ')+'. غيّر التواريخ أو احجز غرفاً مفردة.');
-      audit('منع حجز كامل الاستراحة', name+' — '+date+' → '+checkout+' — مشغولة: '+busy.map(u=>u.name).join('، ')); return;
-    }
-    if(!unitsCommittable(units, date, nights)){
-      const pa = periodAvail(date, nights);
-      fail('كامل الاستراحة لا يمكن بيعه في هذه الليالي — بعضها ملتزم بحجوزات بلا غرفة محددة (المتاح لكل الفترة '+pa.free+' من '+pa.rooms+' وحدة). احجز غرفاً مفردة أو غيّر الأرقام.');
-      audit('منع حجز كامل الاستراحة فوق الطاقة', name+' — '+date+' → '+checkout+' — المتاح لكل الفترة بعد خصم الحجوزات غير المحددة: '+pa.free+' من '+pa.rooms); return;
-    }
-  } else if(ids.length){
-    conflict = bookingConflict(date,type,null,nights,0,'',ids);
-    if(!conflict && !unitsCommittable(units, date, nights)){
-      const pa = periodAvail(date, nights);
-      fail('الطاقة ممتلئة في ليالي هذه الفترة بحجوزات بلا غرفة محددة — '+(units.length>1 ? 'الوحدات '+unitNames : 'غرفة '+units[0].name)+' فارغة بالاسم ولا يجوز بيعها. اختر وحدة أخرى أو غيّر الأرقام.');
-      audit('منع حجز فوق الطاقة', name+' — '+(unitNames||'—')+' — '+date+' → '+checkout+' — المتاح لكل الفترة بعد خصم الحجوزات غير المحددة: غرف '+pa.freeRoom+' / شاليهات '+pa.freeChalet);
-      return;
-    }
-  } else if(bookKind || sel){
-    const cand = unitsFreeRange(sel, bookKind, date, nights, props).length;
-    if(cand === 0){
-      fail('لا '+(sel==='chalet' ? 'شاليه' : 'غرفة')+' في «'+secSelLbl(sel)+'» خالية لكل ليالي الفترة من '+calDayLbl(date)+' إلى '+calDayLbl(checkout)+' — غيّر القسم أو الأرقام، أو حدّد وحدة بعينها.');
-      audit('منع حجز بلا وحدة متاحة', name+' — '+date+' → '+checkout+' — '+secSelLbl(sel)+' — لا وحدة تخلو لكل الليالي ضمن الطاقة');
-      return;
-    }
-  } else {
-    conflict = bookingConflict(date,type,null,nights,0,'');
-  }
-  if(conflict){
-    const mine = stayDates({date, nights}), theirs = new Set(stayDates(conflict));
+  /* فحص التعارض دالةٌ تُستدعى مرتين: على بيانات الجهاز، ثم على بيانات السحابة الطرية */
+  const clashOf = c => {
+    const mine = stayDates({date, nights}), theirs = new Set(stayDates(c));
     const hit = mine.find(d=>theirs.has(d)) || date;
-    fail(`تعارض حجز${ids.length ? ' في '+unitNames : ''}: ${conflictLbl(conflict)} — الليلة ${hit} محجوزة بالفعل.`);
-    audit('منع حجز مزدوج', `محاولة حجز ${date} → ${checkout}${unitNames ? ' في '+unitNames : ''} متعارضة مع ${conflict.code} في ${hit}`); return;
+    return {msg:`تعارض حجز${ids.length ? ' في '+unitNames : ''}: ${conflictLbl(c)} — الليلة ${hit} محجوزة بالفعل.`,
+      kind:'منع حجز مزدوج', code:c.code,
+      detail:`محاولة حجز ${date} → ${checkout}${unitNames ? ' في '+unitNames : ''} متعارضة مع ${c.code} في ${hit}`};
+  };
+  const clash = ()=>{
+    if(sel === 'both'){
+      const busy = units.filter(u=> !roomFree(u.id, date, nights, type));
+      if(busy.length) return {msg:'كامل الاستراحة غير متاح لهذه الليالي — الغرف المشغولة: '+busy.map(unitTagOf).join('، ')+'. غيّر التواريخ أو احجز غرفاً مفردة.',
+        kind:'منع حجز كامل الاستراحة', detail:name+' — '+date+' → '+checkout+' — مشغولة: '+busy.map(u=>u.name).join('، ')};
+      if(!unitsCommittable(units, date, nights)){
+        const pa = periodAvail(date, nights);
+        return {msg:'كامل الاستراحة لا يمكن بيعه في هذه الليالي — بعضها ملتزم بحجوزات بلا غرفة محددة (المتاح لكل الفترة '+pa.free+' من '+pa.rooms+' وحدة). احجز غرفاً مفردة أو غيّر الأرقام.',
+          kind:'منع حجز كامل الاستراحة فوق الطاقة',
+          detail:name+' — '+date+' → '+checkout+' — المتاح لكل الفترة بعد خصم الحجوزات غير المحددة: '+pa.free+' من '+pa.rooms};
+      }
+      return null;
+    }
+    if(ids.length){
+      const c = bookingConflict(date,type,null,nights,0,'',ids);
+      if(c) return clashOf(c);
+      if(!unitsCommittable(units, date, nights)){
+        const pa = periodAvail(date, nights);
+        return {msg:'الطاقة ممتلئة في ليالي هذه الفترة بحجوزات بلا غرفة محددة — '+(units.length>1 ? 'الوحدات '+unitNames : 'غرفة '+units[0].name)+' فارغة بالاسم ولا يجوز بيعها. اختر وحدة أخرى أو غيّر الأرقام.',
+          kind:'منع حجز فوق الطاقة',
+          detail:name+' — '+(unitNames||'—')+' — '+date+' → '+checkout+' — المتاح لكل الفترة بعد خصم الحجوزات غير المحددة: غرف '+pa.freeRoom+' / شاليهات '+pa.freeChalet};
+      }
+      return null;
+    }
+    if(bookKind || sel){
+      if(unitsFreeRange(sel, bookKind, date, nights, props).length === 0){
+        return {msg:'لا '+(sel==='chalet' ? 'شاليه' : 'غرفة')+' في «'+secSelLbl(sel)+'» خالية لكل ليالي الفترة من '+calDayLbl(date)+' إلى '+calDayLbl(checkout)+' — غيّر القسم أو الأرقام، أو حدّد وحدة بعينها.',
+          kind:'منع حجز بلا وحدة متاحة',
+          detail:name+' — '+date+' → '+checkout+' — '+secSelLbl(sel)+' — لا وحدة تخلو لكل الليالي ضمن الطاقة'};
+      }
+      return null;
+    }
+    const c = bookingConflict(date,type,null,nights,0,'');
+    return c ? clashOf(c) : null;
+  };
+  const blocked = clash();
+  if(blocked){ fail(blocked.msg); audit(blocked.kind, blocked.detail); return; }
+  /* بوابة الأجهزة المتعددة: قراءة السحابة قبل الكتابة — حجزٌ وصل من جهاز آخر في نفس الدقيقة يوقف البيع هنا */
+  if(cloudLive()){
+    toast('⏳ تحقّق من السحابة قبل الحفظ...');
+    const g = await freshCloudRead();
+    if(!g || (g.error && !g.pushed)){
+      if(!confirm('⚠️ تعذّر التحقق من السحابة'+(g && g.error ? ' ('+g.error+')' : '')+'. الحجز سيُحفظ على هذا الجهاز وحده، ولن يراه بقية الأجهزة قبل نجاح المزامنة. الحفظ على أي حال؟')) return;
+      audit('حجز بلا تحقق سحابي', name+' — '+date+' — '+(g && g.error ? g.error : 'مزامنة جارية لم تكتمل'));
+    } else if(g.conflict){
+      if(!confirm('⚠️ السحابة كانت تُكتب في نفس اللحظة ('+g.attempts+' محاولات) — قد يكون جهازٌ آخر حجز وحدتك نفسها. الحفظ على هذا الجهاز وإعادة الرفع تلقائياً؟')) return;
+      audit('حجز وسط تصادم سحابي', name+' — '+date+' — بعد '+g.attempts+' محاولات دمج');
+    } else {
+      const gone = ids.filter(id=> !db.rooms.some(r=> r.id === id));
+      if(gone.length){
+        fail('بعض الوحدات المختارة حُذفت على جهاز آخر — راجع الاختيار وحدّد وحدة موجودة.');
+        audit('منع حجز بوحدات غائبة', name+' — '+date+' — معرفات غائبة: '+gone.join('، '));
+        renderAll(); return;
+      }
+      const stoppedNow = db.rooms.filter(r=> ids.indexOf(r.id) !== -1 && r.active === false);
+      if(stoppedNow.length){
+        fail('الوحدة «'+stoppedNow[0].name+'» أُوقفت عن الحجز من جهاز آخر — اختر وحدة أخرى.');
+        audit('منع حجز في وحدة أُوقفت', name+' — '+stoppedNow.map(r=>r.name).join('، '));
+        renderAll(); return;
+      }
+      if(ids.length) units = db.rooms.filter(r=> ids.indexOf(r.id) !== -1);
+      const after = clash();
+      if(after){
+        fail('🔒 '+after.msg+' — طلع هذا الحجز من جهازٍ آخر قبل لحظات، فما يُبع مرّتين لا يُباع.');
+        audit('منع حجز مزدوج عبر الأجهزة', after.detail + ' — مكتشف بعد قراءة السحابة' + (after.code ? ' (الحجز القائم: ' + after.code + ')' : ''));
+        renderAll(); return;
+      }
+    }
   }
   const calc = (units.length ? stayPriceUnits(date, nights, type, units) : stayPrice(date, nights, type, null)) + unitsFeatTotal(units.filter(isVillaUnit));
   if(nights > 1 && price !== calc && !confirm(`السعر المكتوب ${money(price)} ر.س لا يطابق تسعير ${nightsWord(nights)} (${money(calc)} ر.س — ${units.length>1 ? 'مجموع أسعار الوحدات '+unitNames+' لكل ليلة' : (units.length ? 'سعر '+unitNames+' لكل ليلة' : 'كل ليلة بسعر يومها')}${unitsFeatTotal(units.filter(isVillaUnit)) > 0 ? ' مع مزايا '+money(unitsFeatTotal(units.filter(isVillaUnit)))+' ر.س' : ''}}). حفظ بالسعر المكتوب رغم ذلك؟`)) return;
@@ -6668,7 +6992,7 @@ function resetWaTemplates(){
 }
 
 /* ================= USERS (OWNER) ================= */
-function addUser(){
+async function addUser(){
   if(!requirePerm('*')) return;
   const name=document.getElementById('nuName').value.trim();
   const username=document.getElementById('nuUser').value.trim();
@@ -6679,19 +7003,22 @@ function addUser(){
   if(pass.length < 4){ toast('كلمة المرور يجب أن تكون 4 أحرف فأكثر'); return; }
   if(db.users.some(u=>u.username.toLowerCase()===username.toLowerCase())){ toast('اسم المستخدم موجود مسبقاً'); return; }
   db.users.push({id:genId(db.users), name, username, role: ROLE_KEYS.includes(role)?role:'reception', pass});
+  await stampCredential(db.users[db.users.length-1]);
   save(); audit('إضافة موظف', username+' — '+(ROLES[role]?.label||role)); renderAll();
-  toast('👤 تمت الإضافة — كلمة المرور تُحفظ على هذا الجهاز فقط');
+  toast(hashReady() ? '👤 تمت الإضافة — الدخول والصلاحيات يترافقان معه في كل جهاز يربطه بنفس السحابة'
+                    : '👤 تمت الإضافة — كلمة المرور على هذا الجهاز فقط (هذا المتصفح لا يوفر تجزئة آمنة)');
   ['nuName','nuUser','nuPass'].forEach(id=>document.getElementById(id).value='');
 }
-function resetPass(id){
+async function resetPass(id){
   if(!requirePerm('*')) return;
   const u = db.users.find(x=>x.id===id); if(!u) return;
   const p = prompt('كلمة المرور الجديدة للمستخدم '+u.username+' (4 أحرف فأكثر):');
   if(p === null) return;
   const np = p.trim();
   if(np.length < 4){ toast('⚠️ كلمة المرور قصيرة — 4 أحرف فأكثر'); return; }
-  u.pass = np; save(); audit('تغيير كلمة مرور', u.username); renderAll();
-  toast(np === DEFAULT_PASS ? '⚠️ هذه كلمة المرور الافتراضية — اختر غيرها' : '✅ تم تغيير كلمة المرور على هذا الجهاز');
+  u.pass = np; await stampCredential(u);
+  save(); audit('تغيير كلمة مرور', u.username + (u.ph ? ' — الهاش أُعيد حسابه ويرفع للسحابة' : '')); renderAll();
+  toast(np === DEFAULT_PASS ? '⚠️ هذه كلمة المرور الافتراضية — اختر غيرها' : '✅ تم تغيير كلمة المرور، وهُيّأ الجهاز لرفعها لكل أجهزة الموظف');
 }
 function removeUser(id){
   if(!requirePerm('*')) return;
@@ -6706,8 +7033,8 @@ function removeUser(id){
 /* شاشة تنبيه واحدة (v5.11). اللافتات الخمس القديمة حُذفت لأن نصها يصف نماذج استُبدلت:
    «قسم الشاليهات» و«البرنامج نظامين» (v5.4/v5.5) و«بطاقات الأقسام لا تستجيب» (v5.9) —
    فكانت تعلّم العميل على سلوك لم يعد في البرنامج. الترحيلات نفسها باقية كما هي: المحذوف هو اللافتة لا العملية. */
-const VER_NOTES = ['v61','v60','v512','v511','v510'];
-const VER_NOTE_FN = {v61: 'noteV61', v60: 'noteV600', v512: 'noteV512', v511: 'noteV511', v510: 'noteV510'};
+const VER_NOTES = ['v62','v61','v60','v512','v511','v510'];
+const VER_NOTE_FN = {v62: 'noteV62', v61: 'noteV61', v60: 'noteV600', v512: 'noteV512', v511: 'noteV511', v510: 'noteV510'};
 function verNoteOf(){
   /* جهاز جديد تأسس فارغاً على النموذج الحالي: لا شيء وُضع له من ترحيل، فلا لافتة «بياناتك عند الترحيل» عليه */
   const f = db.settings.v512;
@@ -6764,6 +7091,22 @@ function noteV600(m){
       <button class="btn btn-dark btn-sm" onclick="gotoView('dashVilla')">🏡 افتح لوحة الشاليهات</button>
       <button class="btn btn-gray btn-sm" onclick="gotoView('dashRest')">🏨 لوحة الاستراحة</button>
       <button class="btn btn-gray btn-sm" onclick="gotoView('reports')">📊 التقارير بأقسامها ومزاياها</button>
+      <button class="btn btn-gray btn-sm" onclick="dismissVersionNotice()">فهمت — أخفِ التنبيه</button>
+    </div></div>`;
+}
+function noteV62(m){
+  return `<div><b>🆕 v6.2 — كل الأجهزة تسكن سجلاً واحداً: لا يُباع الليلة مرتين، ولا يُمحى حجز فوق حجز</b>
+    <ul>
+      <li>🔒 <b>الرفع صار مشروطاً:</b> الجهاز يقرأ «طابع» نسخة السحابة ويرفع مرفقاً بشرط لمّا تبقى هي نفسها. كتبَ جهازٌ آخر في الأثناء؟ تُرفض الرفعة ويعيد الجهاز القراءة والدمج والمحاولة — فلا يختفي حجز موظف لأنه رفعٍ متأخر من جهازٍ ثانٍ.</li>
+      <li>⚡ <b>سماع فوري:</b> تعديل أي جهاز يصل لبقية الأجهزة لحظة كتابته، بدل انتظار دور الـ 30 ثانية (والدوري باقٍ احتياطاً لو انقطعت القناة).</li>
+      <li>🛡️ <b>شاشة الحجز تسأل السحابة قبل أن تحفظ:</b> لو باع جهازٌ آخر شاليهك في نفس الدقيقة يوقفك الحفظ بـ«🔒 الليلة محجوزة بالفعل» ويذكر رقم الحجز القائم، ولا يكتب حجزاً مزدوجاً ثم يعدّله أحد.</li>
+      <li>🔑 <b>دخولك يتبعك:</b> كلمة المرور تُرفع بصمعتها (هاش) لا بنصها، فأي جهاز تربطه بنفس العقدة يقبل اسم المستخدم وكلمة مرورهما الأصليين مع صلاحيات دورهما. وكلمة هذا الجهاز تظل مقبولة — فلا يُطرد أحد من جهازٍ كان يعمل عليه.</li>
+      <li>🩺 <b>لوحة فحص الاتصال</b> في «⚙️ الإعدادات»: هل العقدة تردّ بطابع؟ هل تقبل الشروط؟ متى آخر رفعة ومن صاحبها؟ وكم تصادماً أُعيد دمجه على هذا الجهاز.</li>
+      <li><b>بياناتك عند الترحيل:</b> ${arCount(m.users,'موظف واحد','موظفان','موظفين','موظفًا')} (${m.hashed || 0} تُحسب بصمة دخوله الآن ويُرفع للبقية) و${arCount(m.liveBk,'حجز نشط واحد','حجزان نشطان','حجوزات نشطة','حجزاً نشطاً')} و${arCount(m.inv,'فاتورة واحدة','فاتورتان','فواتير','فاتورة')} — <b>لم يتغيّر سجل ولا مبلغ ولا صلاحية</b>؛ النصّ الجديد في قاعدة بياناتك هو بصمة الدخول وحدها.${m.link ? ' ربطك السحابي مكشوف هنا ويُقاس بضغطة «فحص الاتصال».' : ' لم تربط سحابة بعد: كل شيء يعمل على هذا الجهاز، والربط من «⚙️ الإعدادات».'}</li>
+    </ul>
+    <div class="nv-actions">
+      <button class="btn btn-dark btn-sm" onclick="gotoView('settings')">⚙️ الإعدادات وربط الأجهزة</button>
+      <button class="btn btn-gray btn-sm" onclick="cloudDiagnose()">🩺 افحص الاتصال بالسحابة</button>
       <button class="btn btn-gray btn-sm" onclick="dismissVersionNotice()">فهمت — أخفِ التنبيه</button>
     </div></div>`;
 }
@@ -7155,6 +7498,24 @@ function migrateV61(){
     + sum.users + ' موظف، و' + sum.rests + ' غرفة استراحة، و' + sum.villas + ' شاليهاً، و'
     + sum.liveBk + ' حجزاً نشطاً، و' + sum.inv + ' فاتورة — لم يُمسّ سجل ولا مبلغ ولا صلاحية.');
   return sum;
+}
+function migrateV62(){
+  const m = db.settings.v62;
+  if(m && m.at) return m;
+  const sum = {at:new Date().toISOString(), fresh:!db.users.length, users:(db.users||[]).length,
+    hashed:0, liveBk:(db.bookings||[]).filter(liveBk).length, inv:(db.invoices||[]).length, link:!!endpoint()};
+  db.settings.v62 = sum; save();
+  audit('تحديث v6.2', 'ربط الأجهزة المتعددة: رفع مشروط بالطابع، سماع فوري، وبوابة تحقّق قبل الحفظ. بياناتك: '
+    + sum.users + ' موظف، و' + sum.liveBk + ' حجزاً نشطاً، و' + sum.inv + ' فاتورة — لا سجل ولا مبلغ ولا صلاحية تغيّرت.');
+  stampMissingPasswords();
+  return sum;
+}
+/* بصمات الدخول تُحسب بعد التأسيس بلا انتظار: الصامتن عن الحساب لا يُطرَدن من أجهزتهن */
+async function stampMissingPasswords(){
+  if(!hashReady()) return;
+  const need = (db.users||[]).filter(u=> !u.ph);
+  for(const u of need){ try{ await stampCredential(u); }catch(e){} }
+  if(need.length){ db.settings.v62.hashed = need.length; save(); }
 }
 /* ============ اللوحتان المستقلتان (v6.0) — كل كيان بلوحة بأرقامها وأقسامها وحجوزاتها ============ */
 const PAID_ST = ['completed','ready','checkedin','cleaning'];
@@ -7871,7 +8232,7 @@ function renderAudit(){
 function renderUsers(){
   if(!currentUser || currentUser.role!=='owner') return;
   document.getElementById('usersBody').innerHTML = db.users.map(u=>`
-    <tr><td>${esc(u.name)}${u.pass===DEFAULT_PASS?' <span class="chip st-cleaning">كلمة مرور افتراضية</span>':''}</td><td>${esc(u.username)}</td>
+    <tr><td>${esc(u.name)}${u.pass===null ? ' <span class="chip rk-room">كلمته من السحابة — لم تُكتب على هذا الجهاز</span>' : u.pass===DEFAULT_PASS?' <span class="chip st-cleaning">كلمة مرور افتراضية</span>':''}</td><td>${esc(u.username)}</td>
     <td><span class="chip" style="background:${(ROLES[u.role]||{}).color||'#5e4c72'}">${esc((ROLES[u.role]||{}).label||u.role)}</span></td>
     <td><button class="btn btn-gray btn-sm" onclick="resetPass(${u.id})">كلمة المرور</button>
     <button class="btn btn-red btn-sm" onclick="removeUser(${u.id})"${u.role==='owner'?' disabled':''}>حذف</button></td></tr>`).join('');
@@ -7887,6 +8248,7 @@ function renderSettings(){
     if(document.activeElement !== el) el.value = cfg[id === 'cfgUrl' ? 'url' : 'token'] || '';
   });
   document.getElementById('cfgAuto').checked = !!cfg.auto;
+  renderCloudDiag();
   const tw = document.getElementById('setTerms');
   if(tw && document.activeElement !== tw) tw.value = db.settings.terms || TERMS_DEF;
   const th = document.getElementById('setTermsHint');
@@ -8010,11 +8372,13 @@ migrateV511();
 migrateV512();
 migrateV60();
 migrateV61();
-applyBrand();
+migrateV62();applyBrand();
 initLoginScreen();
 applyNavHidden();
-/* جهاز جديد بلا حسابات = شاشة تأسيس، لا موظفون افتراضيون بكلمة مرور واحدة */
-if(!db.users.length) showSetup();
+/* جهاز جديد بلا حسابات: ربطٌ محفوظ عندئذٍ سحبٌ أول، وإلا شاشة تأسيس. لا موظفون افتراضيون بكلمة واحدة */
+if(!db.users.length){
+  if(endpoint()) bootJoin(); else showSetup();
+}
 bkInit();
 if(restoreSession()){
   enterApp();
