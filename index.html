@@ -53,6 +53,11 @@ body::before{content:''; position:fixed; inset:0; z-index:-1; pointer-events:non
 .login-card h1{font-size:22px; text-align:center; margin:8px 0 2px; font-weight:800; letter-spacing:.2px; color:#241735;}
 .login-card .sub{text-align:center; color:var(--muted); font-size:12.5px; margin-bottom:22px; font-weight:600;}
 .login-card .lock-note{background:#f4f0fa; border:1px solid #e2d8f0; color:#4b3568; font-size:11.5px; border-radius:11px; padding:10px 12px; margin-top:14px; text-align:center; line-height:1.8;}
+/* شارة حالة الربط (v6.4): الأخضر سجل مشترك، العنبري مربوط بتلقائي مطفأ، الأحمر جهاز محلي أو عقدة لا تصل */
+.login-card .lock-note.note-ok{background:#e7f1ea; border-color:#bcd8c6; color:#1d4b36;}
+.login-card .lock-note.note-warn{background:#fff4e0; border-color:#ecdcb4; color:#5a4413;}
+.login-card .lock-note.note-bad{background:#fbeaea; border-color:#e2bcbc; color:#6d2230;}
+.link-badge{font-size:11px; padding:6px 10px;}
 .field{position:relative;}
 .field .f-ico{position:absolute; inset-inline-start:12px; top:50%; transform:translateY(-50%); font-size:15px; opacity:.65; pointer-events:none;}
 .field input{width:100%; padding-inline-start:40px !important;}
@@ -492,6 +497,7 @@ nav button .ico svg{width:19px; height:19px; display:block; margin:0 auto; verti
       <button class="btn-login" onclick="doLogin()">🔓 تسجيل الدخول</button>
       <div class="lock-note">🔒 كلمة مرورك تبقى مكتوبة في متصفح هذا الجهاز وحده؛ الذي يسافر مع المزامنة هو بصمتها فقط — فتحصل على دخولك وصلاحياتك في أي جهاز ربطته بنفس العقدة. الجلسة تُستأنف تلقائياً حتى 12 ساعة من آخر استخدام، و«🚪 تسجيل الخروج» يُغلقها فوراً</div>
       <div class="join-box">
+        <div id="loginLinkNote" class="lock-note" style="display:none;"></div>
         <button type="button" class="join-toggle" onclick="toggleJoinPanel()">🔗 جهاز جديد؟ اربطه بالسحابة لتصلك الحجوزات والموظفون وصلاحيات كل واحد</button>
         <div id="joinPanel" style="display:none;">
           <div class="form-row"><label>رابط السحابة</label><input id="joinUrl" dir="ltr" class="tl" placeholder="https://xxxxx.firebaseio.com" autocomplete="off" spellcheck="false"></div>
@@ -1550,7 +1556,7 @@ const CFG_KEY = 'chalet_sync_cfg_v1';
 const SESSION_KEY = 'chalet_erp_session_v1';
 const SESSION_TTL = 12*60*60*1000;
 const DEFAULT_PASS = '1234';
-const VERSION = 'v6.3';
+const VERSION = 'v6.4';
 const VAT = 0.15;
 /* بوابة الموظفين: /staff أو ?staff = نفس البرنامج بلا شاشة تأسيس ولا شاشات المالك.
    الحالة تُقرأ من الرابط في كل فتح ولا تُخزَّن: الرابط الرئيسي يبقى كاملاً على نفس الجهاز */
@@ -2271,6 +2277,7 @@ function startLockTick(){
 function initLoginScreen(){
   const v = document.getElementById('loginVer');
   if(v) v.textContent = 'الإصدار ' + VERSION;
+  renderLoginLinkNote();
   const kept = rememberedUser(), u = document.getElementById('loginUser'), box = document.getElementById('loginRemember');
   if(kept){ u.value = kept; if(box) box.checked = true; const p = document.getElementById('loginPass'); setTimeout(()=>{ if(p) p.focus(); }, 120); }
   else setTimeout(()=>{ const f = document.getElementById('loginUser'); if(f) f.focus(); }, 120);
@@ -2350,6 +2357,7 @@ async function bootStaffGate(){
   document.getElementById('setupScreen').classList.remove('on');
   document.getElementById('loginScreen').style.display = 'flex';
   applyStaffChrome();
+  renderLoginLinkNote();
   if(db.users.length){
     joinMsg('هذه بوابة الموظفين — سجّل باسمك وكلمتك، وصلاحياتك معك من أي جهاز.');
     if(endpoint()){ await cloudSync({mode:'pull', silent:true}); if(cfg.auto) startPolling(); }
@@ -2494,6 +2502,7 @@ function doLogout(){
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('loginError').style.display='none';
   loginCapsState(false); clearInterval(lockTick); lockTick = null;
+  renderLoginLinkNote();
   const keptU = rememberedUser();
   document.getElementById('loginUser').value = keptU || '';
   document.getElementById('loginPass').value='';
@@ -2668,6 +2677,7 @@ function readCfgForm(){
   cfg.token = document.getElementById('cfgToken').value.trim();
   cfg.auto = document.getElementById('cfgAuto').checked;
   saveCfg();
+  renderLinkUI();
 }
 function endpoint(){
   if(!validUrl(cfg.url) || !validToken(cfg.token)) return null;
@@ -2783,7 +2793,7 @@ function cloudPayload(rev){
    في الأثناء يرفض السيرفر الرفعة بكود 412، فيعيد الجهاز القراءة والدمج والمحاولة —
    فلا يُمحى حجز جهازٍ فوق حجز جهازٍ آخر كما كان يحدث مع الرفع الأعمى. */
 const CAS = {mode:'', tag:'', reads:0, writes:0, races:0, ms:0, bytes:0, status:'', by:'', pushedAt:'',
-             cond:'', stream:'', probe:'', err:''};
+             cond:'', stream:'', probe:'', err:'', okAt:0, errAt:0};
 let syncing = false, syncAgain = null, autoTimer = null, syncTimer = null, casRetry = null, es = null, esTimer = null, committing = false;
 function cloudLive(){ return !!(cfg.auto && endpoint()); }
 /* قراءة طرية قبل الحجز الحسّاس: إن كانت دورة مزامنة جارية تنتظرها ثانيةً كحدٍّ أقصى ثم تقرأ بنفسها */
@@ -2809,7 +2819,7 @@ async function cloudRead(){
   if(!res.ok) throw new Error('GET ' + String(res.status));
   CAS.status = String(res.status);
   const json = await res.json();
-  CAS.reads++;
+  CAS.reads++; CAS.okAt = Date.now();
   if(json && typeof json === 'object' && !Array.isArray(json) && ('etag' in json) && ('body' in json)){
     CAS.mode = 'body'; CAS.tag = String(json.etag || '');
     return {raw: json.body == null ? null : json.body, tag:CAS.tag};
@@ -2889,11 +2899,12 @@ async function cloudSync(opts = {}){
     }
   }catch(e){
     const msg = String(e.message || '');
-    CAS.err = msg;
+    CAS.err = msg; CAS.errAt = Date.now();
     if(!opts.silent) toast(msg.startsWith('PUT') ? '❌ الرفع مرفوض — فعّل .write في قواعد Firebase لنفس الرمز' : '❌ فشل الاتصال — تحقق من الرابط والرمز وقواعد Firebase');
     else if(syncTimer){ clearInterval(syncTimer); syncTimer = null; setTimeout(startPolling, 30000); }
     return {changed:false, pushed:false, error:msg, cas:CAS.mode};
   }finally{ syncing = false; const again = syncAgain; syncAgain = null; if(cfg.auto) startPolling();
+    renderLinkUI();
     if(again && endpoint() && currentUser) setTimeout(()=>{ if(!syncing) cloudSync(again); }, 150); }
 }
 /* سماع لحظي: فايربيز يرسل حدثاً لكل كتابة، فلا ينتظر الجهاز دورة الـ 30 ثانية */
@@ -2906,15 +2917,15 @@ function startStream(){
   if(es) return;
   try{
     es = new EventSource(endpoint());
-    es.onopen = ()=>{ CAS.stream = 'متصل'; renderCloudDiag(); };
+    es.onopen = ()=>{ CAS.stream = 'متصل'; renderCloudDiag(); renderTopTools(); };
     es.addEventListener('put', queueStreamRead);
     es.addEventListener('patch', queueStreamRead);
     es.onerror = ()=>{
       CAS.stream = (es && es.readyState === 2) ? 'منقطع — يعتمد على السحب الدوري' : 'إعادة اتصال';
       if(es && es.readyState === 2){ try{ es.close(); }catch(e){} es = null; }
-      renderCloudDiag();
+      renderCloudDiag(); renderTopTools();
     };
-  }catch(e){ es = null; CAS.stream = 'لا يعمل في هذا المتصفح'; }
+  }catch(e){ es = null; CAS.stream = 'لا يعمل في هذا المتصفح'; renderTopTools(); }
 }
 function stopStream(){ clearTimeout(esTimer); esTimer = null; if(es){ try{ es.close(); }catch(e){} es = null; } CAS.stream = 'متوقف'; }
 function cloudPush(){ if(requirePerm('*')){ readCfgForm(); startPolling(); startStream(); cloudSync(); } }
@@ -2976,6 +2987,50 @@ function renderCloudDiag(){
     [CAS.err ? 'آخر خطأ' : 'ملاحظة', CAS.err ? '❌ ' + CAS.err : 'التصادم طبيعي عند الكتابة المتزامنة؛ الجهاز يعيد الدمج حتى 4 مرات ثم يحاول تلقائياً بعد 20 ثانية'],
   ];
   el.innerHTML = '<table><tbody>' + rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('') + '</tbody></table>';
+}
+
+/* ================= حالة الربط ظاهرة على الشاشة (v6.4) =================
+   الجهاز غير المربوط يبقى عمله محفوظاً عنده وحده: لا يصل لزملائه ولا يمنع بيع الليلة مرتين.
+   الحالة تُحسب من قياس هذا الجهاز نفسه — وقت آخر قراءة ناجحة (CAS.okAt) ووقت آخر خطأ (CAS.errAt) — لا من افتراض عن السيرفر. */
+function linkStatus(){
+  if(!endpoint()) return {k:'local', cls:'btn-red', icon:'📱', short:'غير مربوط بالسحابة',
+    long:'هذا الجهاز يعمل على سجله المحلي وحده: حجوزاته لا تصل لبقية الأجهزة ولا تمنع بيع الغرفة مرتين. شغله محفوظ عليه ولا يُمسح عند الربط.',
+    how:'المالك من «⚙️ الإعدادات ← ☁️ المزامنة»، والموظف الجديد من شاشة الدخول بـ«🔗 جهاز جديد؟ اربطه بالسحابة».'};
+  if(CAS.errAt > CAS.okAt) return {k:'down', cls:'btn-red', icon:'⛔', short:'السحابة لا تصل',
+    long:'الرابط والرمز مكتوبان لكن آخر محاولة فشلَت: ' + (CAS.err || 'خطأ غير مسمّى') + ' — الشغل على هذا الجهاز محفوظ، ويصل السحابة أول ما ترجع النقطة.',
+    how:'راجع الإنترنت ثم «🩺 افحص الاتصال بالسحابة»؛ ولو بقي الرفض فالرمز أو قواعد Firebase عند المالك.'};
+  if(!CAS.okAt) return {k:'wait', cls:'btn-gray', icon:'⏳', short:'لم تُقرأ السحابة بعد',
+    long:'الجهاز مربوط بالعقدة ولم تكتمل قراءة ناجحة على هذا الفتح بعد.',
+    how:'اضغط «🔄 مزامنة الآن» أو انتظر الدورة التلقائية.'};
+  const when = fmtDateTime(new Date(CAS.okAt).toISOString());
+  if(!cfg.auto) return {k:'idle', cls:'btn-amber', icon:'🔗', short:'مربوط — المزامنة مطفأة',
+    long:'الجهاز مربوط بالعقدة لكن المزامنة التلقائية مطفأة (آخر قراءة ' + when + '): تعديلاته لا تُرفع ولا يصله جديد زملائه إلا بالضغط على «🔄 مزامنة الآن».',
+    how:'شغّل المزامنة التلقائية أو اضغط «🔄 مزامنة الآن» قبل كل وردية وبعدها.'};
+  return {k:'live', cls:'btn-green', icon:'🔗', short:'سجل مشترك ' + (CAS.stream === 'متصل' ? '⚡ لحظي' : '🔄 تلقائي'),
+    long:'هذا الجهاز مربوط ويعمل على نفس سجل بقية الأجهزة — آخر قراءة ' + when + '، وسماعه اللحظي «' + (CAS.stream || 'لم يبدأ') + '»'
+      + (CAS.pushedAt ? '، وآخر رفعة وصلت من «' + (CAS.by || '—') + '» ' + fmtDateTime(CAS.pushedAt) : '') + '.',
+    how:''};
+}
+function renderLinkUI(){ renderTopTools(); renderLoginLinkNote(); }
+function linkBadgeTap(){
+  const st = linkStatus();
+  if(st.k === 'live'){ toast('🔗 ' + st.long); return; }
+  if(STAFF_MODE || !can('view.settings')){ toast('🔗 ' + st.short + ' — ' + st.how); return; }
+  gotoView('settings');
+  setTimeout(()=>{ const el = document.getElementById('cfgUrl'); if(el){ el.focus(); try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){} } }, 150);
+}
+function renderLoginLinkNote(){
+  const el = document.getElementById('loginLinkNote'); if(!el) return;
+  const st = linkStatus();
+  const n = (db.bookings||[]).length, nu = (db.users||[]).length, parts = [];
+  if(n) parts.push(arCount(n, 'حجز واحد', 'حجزان', 'حجوزات', 'حجزاً'));
+  if(nu) parts.push(arCount(nu, 'موظف واحد', 'موظفان', 'موظفين', 'موظفًا'));
+  el.className = 'lock-note ' + (st.k === 'live' ? 'note-ok' : st.k === 'idle' || st.k === 'wait' ? 'note-warn' : 'note-bad');
+  el.style.display = 'block';
+  /* textContent لا innerHTML: رسالة الخطأ تُعرض كما هي ولا تُفسَّر كوسم لو جاء نصّها من نقطة غير موثوقة */
+  el.textContent = st.icon + ' ' + st.short + ': ' + st.long
+    + (st.how ? ' ' + st.how : '')
+    + (parts.length ? ' الموجود على هذا الجهاز الآن: ' + parts.join(' و') + '.' : '');
 }
 
 /* ================= LOCAL BACKUP ================= */
@@ -6204,7 +6259,9 @@ async function saveBookingBody(){
   save(); closeModal('bookingModal');
   const seas = staySeasons(date, nights);
   audit('إنشاء حجز', 'BK-'+db.seq.booking+' — '+name+' — هوية '+nid+' — '+date+(nights>1 ? ' → '+checkout+' ('+nightsWord(nights)+')' : '')+' — '+typeLbl(type)+' — '+MODE_LBL[mode]+(propNames ? ' في '+propNames : '')+(sel && sel !== 'both' && mode !== 'combo' ? ' — قسم '+secSelLbl(sel) : '')+(ids.length ? (ids.length>1 ? ' — '+ids.length+' وحدات: '+unitNames : ' — '+unitNames) : (bookKind === 'chalet' ? ' — شاليه بلا وحدة محددة' : (sel ? ' — بلا وحدة محددة' : '')))+(seas.length ? ' — '+seas.map(x=>'موسم '+x.name+' ('+x.nights+(x.nights===1?' ليلة':' ليالٍ')+')').join(' + ') : '')+(fees.length ? ' — مزايا: '+feesText(fees) : '')+' — '+money(price)+' ر.س');
-  toast('✅ تم حفظ الحجز (رقم BK-'+db.seq.booking+')');
+  toast(cloudLive() ? '✅ تم حفظ الحجز (رقم BK-'+db.seq.booking+')'
+    : !endpoint() ? '⚠️ BK-'+db.seq.booking+' حُفظ على هذا الجهاز وحده — غير مربوط بالسحابة: لا يصل لزملائك ولا يمنع بيع هذه الغرفة مرتين'
+    : '⚠️ BK-'+db.seq.booking+' حُفظ هنا — المزامنة التلقائية مطفأة: اضغط «🔄 مزامنة الآن» ليصل لزملائك');
   renderAll();
 }
 
@@ -6223,7 +6280,9 @@ function renderTopTools(){
   const today = ymd();
   const unbilled = db.bookings.filter(b=> liveBk(b) && checkOutOf(b) >= today && !liveInv().some(i=> i.bookingId === b.id)).length;
   const nArch = (db.bookings||[]).filter(isArch).length;
+  const st = linkStatus();
   box.innerHTML = [
+    `<button type="button" class="btn ${st.cls} btn-sm link-badge" title="${esc(st.long)}" onclick="linkBadgeTap()">${st.icon} ${st.short}</button>`,
     `<input class="top-search" id="topSearch" placeholder="🔎 بحث سريع: كود الحجز أو اسم العميل أو الجوال" onkeydown="if(event.key==='Enter')topSearchGo()">`,
     undoSnap
       ? `<button class="btn btn-amber btn-sm" title="تراجع عن «${esc(undoSnap.label)}» — ${fmtDateTime(undoSnap.at)}" onclick="undoLastOp()">↩️ تراجع: ${esc(undoSnap.label)}</button>`
@@ -7128,8 +7187,8 @@ function removeUser(id){
 /* شاشة تنبيه واحدة (v5.11). اللافتات الخمس القديمة حُذفت لأن نصها يصف نماذج استُبدلت:
    «قسم الشاليهات» و«البرنامج نظامين» (v5.4/v5.5) و«بطاقات الأقسام لا تستجيب» (v5.9) —
    فكانت تعلّم العميل على سلوك لم يعد في البرنامج. الترحيلات نفسها باقية كما هي: المحذوف هو اللافتة لا العملية. */
-const VER_NOTES = ['v63','v62','v61','v60','v512','v511','v510'];
-const VER_NOTE_FN = {v63: 'noteV63', v62: 'noteV62', v61: 'noteV61', v60: 'noteV600', v512: 'noteV512', v511: 'noteV511', v510: 'noteV510'};
+const VER_NOTES = ['v64','v63','v62','v61','v60','v512','v511','v510'];
+const VER_NOTE_FN = {v64:'noteV64', v63: 'noteV63', v62: 'noteV62', v61: 'noteV61', v60: 'noteV600', v512: 'noteV512', v511: 'noteV511', v510: 'noteV510'};
 function verNoteOf(){
   /* جهاز جديد تأسس فارغاً على النموذج الحالي: لا شيء وُضع له من ترحيل، فلا لافتة «بياناتك عند الترحيل» عليه */
   const f = db.settings.v512;
@@ -7633,6 +7692,33 @@ function migrateV63(){
   audit('تحديث v6.3', 'بوابة موظفين برابط /staff: شاشة دخول بلا تأسيس، وشاشات المالك (الإعدادات والمزامنة والموظفون والنسخ وسجل العمليات) لا تظهر فيها. بياناتك: '
     + sum.users + ' موظف، و' + sum.liveBk + ' حجزاً نشطاً، و' + sum.inv + ' فاتورة — لا سجل ولا مبلغ ولا صلاحية تغيّرت.');
   return sum;
+}
+/* ترحيل v6.4: واجهة وتبيهات فقط — حالة الربط صارت ظاهرة. لا تمسّ سجلاً ولا مبلغاً ولا صلاحية */
+function migrateV64(){
+  const m = db.settings.v64;
+  if(m && m.at) return m;
+  const sum = {at:new Date().toISOString(), fresh:!db.users.length, users:(db.users||[]).length,
+    liveBk:(db.bookings||[]).filter(liveBk).length, inv:(db.invoices||[]).length, link:!!endpoint()};
+  db.settings.v64 = sum; save();
+  audit('تحديث v6.4', 'حالة الربط ظاهرة: شارة أعلى كل شاشة + سطر في شاشة الدخول + تنبيه عند الحجز على جهاز غير مربوط. بياناتك: '
+    + sum.users + ' موظف، و' + sum.liveBk + ' حجزاً نشطاً، و' + sum.inv + ' فاتورة — لا سجل ولا مبلغ ولا صلاحية تغيّرت.');
+  return sum;
+}
+function noteV64(m){
+  return `<div><b>🆕 v6.4 — حالة الربط ظاهرة على كل شاشة: لا جهاز يعمل وحده بلا تنبيه</b>
+    <ul>
+      <li>🔗 <b>شارة أعلى البرنامج:</b> الأخضر «سجل مشترك ⚡ لحظي» يعني أن هذا الجهاز يرى حجوزات بقية الأجهزة ويمتنع عليه بيع ليلة محجوزة؛ الأحمر «غير مربوط بالسحابة» يعني أن شغله يبقى عنده وحده؛ العنبري «مربوط — المزامنة مطفأة» يعني أنه لا يرفع ولا يسحب إلا بالضغط. الشارة محسوبة من قراءة هذا الجهاز نفسه لا من افتراض عن السيرفر.</li>
+      <li>🪪 <b>شاشة الدخول تشرح قبل الدخول:</b> سطرٌ ملوّن تحت خانتي المستخدم وكلمة المرور يقول ربطُ الجهاز ماذا، وكم حجزاً وموظفاً موجودان عليه الآن.</li>
+      <li>⚠️ <b>حجزُ جهازٍ غير مربوط يُقال لك لحظة حفظه:</b> «حُفظ على هذا الجهاز وحده — لا يصل لزملائك ولا يمنع بيع هذه الغرفة مرتين». العمل لا يتعطّل: من يعمل بلا إنترنت يحفظ ويكمل، والشارة تبقى حمراء حتى يربط.</li>
+      <li>👆 النقرة على الشارة تفتح «⚙️ الإعدادات ← ☁️ المزامنة» للمالك، وتشرح لوظيفةٍ لا ترى الإعدادات ما الذي ينقص الجهاز ومن يتمّ الربط.</li>
+      <li>🗄️ <b>الربط لا يحذف شيئاً:</b> السحب يدمج سجلاً سجلاً ويأخذ الأحدث لكل رقم، فحجوزات هذا الجهاز المحلية كلها تبقى وتصل للسحابة عند أول رفع. وقاعدة «بلا حذف نهائي» باقية كما هي.</li>
+      <li><b>بياناتك عند الترحيل:</b> ${arCount(m.users,'موظف واحد','موظفان','موظفين','موظفًا')} و${arCount(m.liveBk,'حجز نشط واحد','حجزان نشطان','حجوزات نشطة','حجزاً نشطاً')} و${arCount(m.inv,'فاتورة واحدة','فاتورتان','فواتير','فاتورة')} — <b>لم يتغيّر سجل ولا مبلغ ولا صلاحية</b>؛ الجديد واجهة وتبيهات.${m.link ? ' هذا الجهاز مربوط بالعقدة.' : ' هذا الجهاز غير مربوط بعد — شارته الحمراء تذكّرك في كل شاشة.'}${STAFF_MODE ? ' أنت في بوابة الموظفين: الرابط لا يغيّر صلاحياتك ولا سجلك.' : ''}</li>
+    </ul>
+    <div class="nv-actions">
+      <button class="btn btn-dark btn-sm" onclick="gotoView('bookings')">🗂️ سجل الحجوزات</button>
+      <button class="btn btn-gray btn-sm" onclick="linkBadgeTap()">🔗 افحص ربط هذا الجهاز</button>
+      <button class="btn btn-gray btn-sm" onclick="dismissVersionNotice()">فهمت — أخفِ التنبيه</button>
+    </div></div>`;
 }
 /* بصمات الدخول تُحسب بعد التأسيس بلا انتظار: الصامتن عن الحساب لا يُطرَدن من أجهزتهن */
 async function stampMissingPasswords(){
@@ -8496,7 +8582,7 @@ migrateV511();
 migrateV512();
 migrateV60();
 migrateV61();
-migrateV62();migrateV63();applyBrand();
+migrateV62();migrateV63();migrateV64();applyBrand();
 initLoginScreen();
 applyStaffChrome();
 applyNavHidden();
